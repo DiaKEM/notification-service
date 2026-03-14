@@ -27,6 +27,15 @@ export class JobConfigurationService {
     return this.model.create(data);
   }
 
+  update(
+    id: string,
+    data: Partial<JobConfiguration>,
+  ): Promise<JobConfigurationDocument | null> {
+    return this.model
+      .findByIdAndUpdate(id, { $set: data }, { new: true })
+      .exec();
+  }
+
   async delete(id: string): Promise<void> {
     await this.model.findByIdAndDelete(id).exec();
   }
