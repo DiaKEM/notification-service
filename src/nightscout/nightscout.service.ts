@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
@@ -97,11 +99,12 @@ export class NightscoutService {
   constructor(private readonly configService: ConfigService) {
     const baseURL = this.configService.getOrThrow<string>('NIGHTSCOUT_URL');
     const apiKey = this.configService.getOrThrow<string>('NIGHTSCOUT_API_KEY');
+    const hashedApiKey = createHash('sha1').update(apiKey).digest('hex');
 
     this.client = axios.create({
       baseURL: baseURL.replace(/\/$/, ''),
       headers: {
-        'api-secret': apiKey,
+        'api-secret': hashedApiKey,
         'Content-Type': 'application/json',
       },
     });
