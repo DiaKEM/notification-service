@@ -10,6 +10,7 @@ import { PushoverModule } from './pushover/pushover.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { JobConfigurationModule } from './job-configuration/job-configuration.module';
 import { JobExecutionModule } from './job-execution/job-execution.module';
+import { PumpAgeModule } from './pump-age/pump-age.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { JobExecutionModule } from './job-execution/job-execution.module';
     TelegramModule,
     JobConfigurationModule,
     JobExecutionModule,
+    PumpAgeModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ApiKeyGuard }],

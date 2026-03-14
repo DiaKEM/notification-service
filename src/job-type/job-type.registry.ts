@@ -1,13 +1,19 @@
 import { JobTypeBase } from './job-type-base';
 
-export class JobTypeRegistry {
-  private static readonly registry = new Map<string, typeof JobTypeBase>();
+export type JobTypeKey =
+  | 'pump-age'
+  | 'pump-occlusion'
+  | 'insulin-level'
+  | 'sensor-age';
 
-  static register(key: string, target: typeof JobTypeBase): void {
+export class JobTypeRegistry {
+  private static readonly registry = new Map<JobTypeKey, typeof JobTypeBase>();
+
+  static register(key: JobTypeKey, target: typeof JobTypeBase): void {
     this.registry.set(key, target);
   }
 
-  static get(key: string): typeof JobTypeBase | undefined {
+  static get(key: JobTypeKey): typeof JobTypeBase | undefined {
     return this.registry.get(key);
   }
 
