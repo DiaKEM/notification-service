@@ -19,7 +19,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:check-nightscout-api": "jest --config ./test/jest-e2e.json --testPathPatterns=nightscout-api --testNamePattern=\"should (connect to Nightscout and return a valid status|fetch at least one recent entry)\"",
-    "test:check-pushover-api": "jest --config ./test/jest-e2e.json --testPathPatterns=pushover --testNamePattern=\"should (return true with valid credentials|send a basic message)\""
+    "test:check-pushover-api": "jest --config ./test/jest-e2e.json --testPathPatterns=pushover --testNamePattern=\"should (return true with valid credentials|send a basic message)\"",
+    "test:check-telegram-api": "jest --config ./test/jest-e2e.json --testPathPatterns=telegram --testNamePattern=\"should (return true and send a test message with valid credentials|send a plain text message)\""
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
