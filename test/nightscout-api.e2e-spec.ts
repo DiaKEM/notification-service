@@ -81,7 +81,10 @@ describe('NightscoutApi (e2e)', () => {
     });
 
     it('should respect the fields param', async () => {
-      const entries = await service.getEntries({ count: 1, fields: 'sgv,date' });
+      const entries = await service.getEntries({
+        count: 1,
+        fields: 'sgv,date',
+      });
 
       expect(entries[0].sgv).toBeDefined();
       expect(entries[0].date).toBeDefined();
