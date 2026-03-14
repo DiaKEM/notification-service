@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PushoverService, PushoverPriority, PushoverSound } from '../src/pushover/pushover.service';
+import {
+  PushoverService,
+  PushoverPriority,
+  PushoverSound,
+} from '../src/pushover/pushover.service';
 import { PushoverModule } from '../src/pushover/pushover.module';
 
 describe('PushoverApi (e2e)', () => {
@@ -75,7 +79,7 @@ describe('PushoverApi (e2e)', () => {
     it('should send a basic message', async () => {
       const result = await service.sendMessage({
         message: 'e2e test — basic message',
-        title: 'diakem-notify-cc test',
+        title: 'diakem-notification-service test',
       });
 
       expect(result.status).toBe(1);
@@ -85,7 +89,7 @@ describe('PushoverApi (e2e)', () => {
     it('should send a message with all optional fields', async () => {
       const result = await service.sendMessage({
         message: 'e2e test — full options',
-        title: 'diakem-notify-cc test',
+        title: 'diakem-notification-service test',
         priority: PushoverPriority.Low,
         sound: PushoverSound.Cosmic,
         url: 'https://example.com',
@@ -100,7 +104,7 @@ describe('PushoverApi (e2e)', () => {
     it('should send a high-priority message', async () => {
       const result = await service.sendMessage({
         message: 'e2e test — high priority',
-        title: 'diakem-notify-cc test',
+        title: 'diakem-notification-service test',
         priority: PushoverPriority.High,
         sound: PushoverSound.Siren,
       });
@@ -111,7 +115,7 @@ describe('PushoverApi (e2e)', () => {
     it('should send an emergency message and cancel it', async () => {
       const result = await service.sendMessage({
         message: 'e2e test — emergency (will be cancelled)',
-        title: 'diakem-notify-cc test',
+        title: 'diakem-notification-service test',
         priority: PushoverPriority.Emergency,
         retry: 30,
         expire: 60,

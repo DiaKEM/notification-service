@@ -1,10 +1,10 @@
 {
-  "name": "diakem-notify-cc",
+  "name": "diakem-notification-service",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Simple multi-channel notification service for nightscout to receive important notifications about pump, insulin, and sensor expiration",
+  "author": "Selcuk Kekec <khskekec@gmail.com>",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
