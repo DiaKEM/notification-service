@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { NightscoutModule } from './nightscout/nightscout.module';
 import { PushoverModule } from './pushover/pushover.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { JobConfigurationModule } from './job-configuration/job-configuration.module';
+import { JobExecutionModule } from './job-execution/job-execution.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { TelegramModule } from './telegram/telegram.module';
     NightscoutModule,
     PushoverModule,
     TelegramModule,
+    JobConfigurationModule,
+    JobExecutionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
