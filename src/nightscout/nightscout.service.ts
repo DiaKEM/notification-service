@@ -143,6 +143,16 @@ export class NightscoutService {
 
   // ─── v1 API ──────────────────────────────────────────────────────────────────
 
+  /** Returns true if the Nightscout API is reachable and reports status 'ok'. */
+  async isConnected(): Promise<boolean> {
+    try {
+      const status = await this.getStatus();
+      return status.status === 'ok';
+    } catch {
+      return false;
+    }
+  }
+
   /** GET /api/v1/status */
   async getStatus(): Promise<NightscoutStatus> {
     const { data } = await this.client.get<NightscoutStatus>('/api/v1/status');
