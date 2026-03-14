@@ -21,18 +21,12 @@ export class PumpAgeJob extends JobTypeBase {
   async execute(): Promise<Log[]> {
     const logs: Log[] = [];
 
-    const statuses = await this.nightscout.getDeviceStatuses({ count: 1 });
-
-    if (!statuses.length) {
-      logs.push(
-        this.log(LogLevel.WARNING, 'No device status found in Nightscout'),
-      );
+    const treatment = await this.nightscout.getLastPumpChange();
+    if (!treatment) {
+      logs.push(this.log(LogLevel.WARNING, 'No pump change found'));
       return logs;
     }
-
-    const latest = statuses[0];
-    const pumpAge = this.resolvePumpAgeInDays(latest);
-
+    const pumpAge = treatment?.elapsedDays;
     if (pumpAge === null) {
       logs.push(
         this.log(
@@ -83,26 +77,6 @@ export class PumpAgeJob extends JobTypeBase {
     }
 
     return logs;
-  }
-
-  private resolvePumpAgeInDays(
-    deviceStatus: Record<string, unknown>,
-  ): number | null {
-    // Nightscout stores pump reservoir/battery info under deviceStatus.pump
-    const pump = deviceStatus['pump'] as Record<string, unknown> | undefined;
-    const reservoir = pump?.['reservoir'] as
-      | Record<string, unknown>
-      | undefined;
-    const clock =
-      reservoir?.['clock'] ?? pump?.['clock'] ?? deviceStatus['created_at'];
-
-    if (!clock || typeof clock !== 'string') return null;
-
-    const insertedAt = new Date(clock);
-    if (isNaN(insertedAt.getTime())) return null;
-
-    const ageMs = Date.now() - insertedAt.getTime();
-    return ageMs / (1000 * 60 * 60 * 24);
   }
 
   private log(level: LogLevel, message: string): Log {

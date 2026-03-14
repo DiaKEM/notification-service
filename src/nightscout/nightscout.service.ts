@@ -120,9 +120,7 @@ export class NightscoutService {
     if (query.fields !== undefined) params['fields'] = query.fields;
 
     if (query.find) {
-      for (const [key, value] of Object.entries(query.find)) {
-        params[`find[${key}]`] = value;
-      }
+      this.flattenObject(query.find, 'find', params);
     }
 
     if (query.sort) {
@@ -139,6 +137,30 @@ export class NightscoutService {
     }
 
     return params;
+  }
+
+  /**
+   * Recursively flattens a nested object into bracket-notation query params.
+   * e.g. { created_at: { $gte: '2020-01-01' } } under prefix 'find' becomes:
+   *   find[created_at][$gte] = '2020-01-01'
+   */
+  private flattenObject(
+    obj: Record<string, unknown>,
+    prefix: string,
+    result: Record<string, unknown>,
+  ): void {
+    for (const [key, value] of Object.entries(obj)) {
+      const flatKey = `${prefix}[${key}]`;
+      if (
+        value !== null &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+      ) {
+        this.flattenObject(value as Record<string, unknown>, flatKey, result);
+      } else {
+        result[flatKey] = value;
+      }
+    }
   }
 
   // ─── v1 API ──────────────────────────────────────────────────────────────────
@@ -671,5 +693,25 @@ export class NightscoutService {
   async getV3Settings(): Promise<unknown> {
     const { data } = await this.client.get('/api/v3/settings');
     return data;
+  }
+
+  /** Returns the most recent "Site Change" treatment and the number of elapsed days since it. */
+  async getLastPumpChange(): Promise<{
+    treatment: NightscoutTreatment;
+    elapsedDays: number;
+  } | null> {
+    const treatments = await this.getTreatments({
+      find: { eventType: 'Site Change', created_at: { $gte: '2020-01-01' } },
+      count: 1,
+    });
+    const treatment = treatments[0];
+    if (!treatment?.created_at) return null;
+
+    const changedAt = new Date(treatment.created_at);
+    if (isNaN(changedAt.getTime())) return null;
+
+    const elapsedDays =
+      (Date.now() - changedAt.getTime()) / (1000 * 60 * 60 * 24);
+    return { treatment, elapsedDays };
   }
 }
