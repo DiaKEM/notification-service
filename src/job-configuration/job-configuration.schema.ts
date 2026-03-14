@@ -33,8 +33,8 @@ export class JobConfiguration {
   @Prop({ type: [NotificationConfigSchema], required: true })
   notifications: NotificationConfig[];
 
-  @Prop({ required: true, enum: ['pushover', 'telegram'] })
-  provider: NotificationProvider;
+  @Prop({ type: [String], required: true, enum: ['pushover', 'telegram'] })
+  provider: NotificationProvider[];
 
   @Prop({ required: true, enum: NotificationPriority })
   priority: NotificationPriority;

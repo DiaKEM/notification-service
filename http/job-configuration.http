@@ -39,12 +39,13 @@ Content-Type: {{contentType}}
 X-Api-Key: {{apiKey}}
 
 {
-  "jobTypeKey": "pump-age-checker",
+  "jobTypeKey": "pump-age",
   "threshold": 4.5,
   "notifications": [
-    { "intervalHours": 2 }
+    { "intervalHours": 2 },
+    { "timePoint": "20:30" }
   ],
-  "provider": "telegram",
+  "provider": ["telegram", "pushover"],
   "priority": "high"
 }
 
