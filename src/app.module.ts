@@ -12,6 +12,7 @@ import { JobConfigurationModule } from './job-configuration/job-configuration.mo
 import { JobExecutionModule } from './job-execution/job-execution.module';
 import { PumpAgeModule } from './pump-age/pump-age.module';
 import { JobTypeModule } from './job-type/job-type.module';
+import { JobManagerModule } from './job-manager/job-manager.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { JobTypeModule } from './job-type/job-type.module';
     JobExecutionModule,
     PumpAgeModule,
     JobTypeModule,
+    JobManagerModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ApiKeyGuard }],

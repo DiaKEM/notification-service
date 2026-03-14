@@ -9,8 +9,8 @@ export class JobExecution {
   @Prop({ required: true })
   jobTypeKey: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'JobConfiguration', required: true })
-  jobConfigurationId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'JobConfiguration' })
+  jobConfigurationId?: Types.ObjectId;
 
   @Prop({ type: [LogSchema], default: [] })
   logs: Log[];

@@ -13,11 +13,11 @@ export class JobExecutionService {
 
   create(
     jobTypeKey: string,
-    jobConfigurationId: string,
+    jobConfigurationId?: string,
   ): Promise<JobExecutionDocument> {
     return this.model.create({
       jobTypeKey,
-      jobConfigurationId,
+      ...(jobConfigurationId && { jobConfigurationId }),
       startedAt: new Date(),
       status: 'running',
       logs: [],

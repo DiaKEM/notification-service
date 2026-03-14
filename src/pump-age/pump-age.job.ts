@@ -4,17 +4,21 @@ import { Log, LogLevel } from '../log/log.schema';
 import { NightscoutService } from '../nightscout/nightscout.service';
 import { JobType } from '../job-type/job-type.decorator';
 import { JobTypeBase } from '../job-type/job-type-base';
+import { JobConfigurationService } from '../job-configuration/job-configuration.service';
 
 export const PUMP_AGE_JOB_KEY = 'pump-age';
 
 @Injectable()
 @JobType(PUMP_AGE_JOB_KEY)
 export class PumpAgeJob extends JobTypeBase {
-  constructor(private readonly nightscout: NightscoutService) {
+  constructor(
+    private readonly nightscout: NightscoutService,
+    private readonly jobConfigService: JobConfigurationService,
+  ) {
     super();
   }
 
-  async execute(config: JobConfigurationDocument): Promise<Log[]> {
+  async execute(): Promise<Log[]> {
     const logs: Log[] = [];
 
     const statuses = await this.nightscout.getDeviceStatuses({ count: 1 });
@@ -36,6 +40,22 @@ export class PumpAgeJob extends JobTypeBase {
           'Could not determine pump age from device status',
         ),
       );
+      return logs;
+    }
+
+    const config = await this.jobConfigService.findNextFitting(
+      PUMP_AGE_JOB_KEY,
+      pumpAge,
+    );
+
+    if (!config) {
+      logs.push(
+        this.log(
+          LogLevel.INFO,
+          `No configuration found for pump age threshold ${pumpAge.toFixed(2)}`,
+        ),
+      );
+
       return logs;
     }
 
