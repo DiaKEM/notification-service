@@ -37,7 +37,7 @@ export class PumpAgeJob extends JobTypeBase {
       return logs;
     }
 
-    const config = await this.jobConfigService.findNextFitting(
+    const config = await this.jobConfigService.findNextLower(
       PUMP_AGE_JOB_KEY,
       pumpAge,
     );

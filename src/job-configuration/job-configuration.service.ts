@@ -47,7 +47,7 @@ export class JobConfigurationService {
    *
    * Example: currentValue=5, unit='days', configs=[2d, 4d] → returns 4d config.
    */
-  findNextFitting(
+  findNextLower(
     jobTypeKey: string,
     currentValue: number,
   ): Promise<JobConfigurationDocument | null> {
@@ -57,6 +57,19 @@ export class JobConfigurationService {
         threshold: { $lte: currentValue },
       })
       .sort({ threshold: -1 })
+      .exec();
+  }
+
+  findNextHigher(
+    jobTypeKey: string,
+    currentValue: number,
+  ): Promise<JobConfigurationDocument | null> {
+    return this.model
+      .findOne({
+        jobTypeKey,
+        threshold: { $gt: currentValue },
+      })
+      .sort({ threshold: 1 })
       .exec();
   }
 }
