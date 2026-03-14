@@ -1,9 +1,8 @@
 import { JobTypeBase } from './job-type-base';
-import { JobTypeKey, JobTypeRegistry } from './job-type.registry';
+import { JobTypeKey, JOB_TYPE_STORE } from './job-type.registry';
 
 export function JobType(key: JobTypeKey): ClassDecorator {
   return (target: Function) => {
-    const jobTypeKey = key ?? target.name;
-    JobTypeRegistry.register(jobTypeKey, target as typeof JobTypeBase);
+    JOB_TYPE_STORE.set(key, target as typeof JobTypeBase);
   };
 }

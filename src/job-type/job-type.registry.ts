@@ -6,18 +6,5 @@ export type JobTypeKey =
   | 'insulin-level'
   | 'sensor-age';
 
-export class JobTypeRegistry {
-  private static readonly registry = new Map<JobTypeKey, typeof JobTypeBase>();
-
-  static register(key: JobTypeKey, target: typeof JobTypeBase): void {
-    this.registry.set(key, target);
-  }
-
-  static get(key: JobTypeKey): typeof JobTypeBase | undefined {
-    return this.registry.get(key);
-  }
-
-  static getAll(): Map<string, typeof JobTypeBase> {
-    return new Map(this.registry);
-  }
-}
+// Populated by @JobType() at class-definition time, before the DI container starts.
+export const JOB_TYPE_STORE = new Map<JobTypeKey, typeof JobTypeBase>();

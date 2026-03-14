@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -11,12 +12,16 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { JobTypeRegistryService } from '../job-type/job-type-registry.service';
 import { JobConfiguration } from './job-configuration.schema';
 import { JobConfigurationService } from './job-configuration.service';
 
 @Controller('/api/job-configurations')
 export class JobConfigurationController {
-  constructor(private readonly service: JobConfigurationService) {}
+  constructor(
+    private readonly service: JobConfigurationService,
+    private readonly jobTypeRegistry: JobTypeRegistryService,
+  ) {}
 
   @Get()
   findAll(@Query('jobTypeKey') jobTypeKey?: string) {
@@ -28,6 +33,12 @@ export class JobConfigurationController {
 
   @Post()
   create(@Body() body: JobConfiguration) {
+    const keys = this.jobTypeRegistry.getRegisteredKeys();
+    if (!keys.includes(body.jobTypeKey as never)) {
+      throw new BadRequestException(
+        `Unknown job type "${body.jobTypeKey}". Registered types: ${keys.join(', ')}`,
+      );
+    }
     return this.service.create(body);
   }
 
@@ -36,6 +47,14 @@ export class JobConfigurationController {
     @Param('id') id: string,
     @Body() body: Partial<JobConfiguration>,
   ) {
+    if (body.jobTypeKey !== undefined) {
+      const keys = this.jobTypeRegistry.getRegisteredKeys();
+      if (!keys.includes(body.jobTypeKey as never)) {
+        throw new BadRequestException(
+          `Unknown job type "${body.jobTypeKey}". Registered types: ${keys.join(', ')}`,
+        );
+      }
+    }
     const updated = await this.service.update(id, body);
     if (!updated)
       throw new NotFoundException(`JobConfiguration ${id} not found`);

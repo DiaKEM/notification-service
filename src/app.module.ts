@@ -11,6 +11,7 @@ import { TelegramModule } from './telegram/telegram.module';
 import { JobConfigurationModule } from './job-configuration/job-configuration.module';
 import { JobExecutionModule } from './job-execution/job-execution.module';
 import { PumpAgeModule } from './pump-age/pump-age.module';
+import { JobTypeModule } from './job-type/job-type.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PumpAgeModule } from './pump-age/pump-age.module';
     JobConfigurationModule,
     JobExecutionModule,
     PumpAgeModule,
+    JobTypeModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ApiKeyGuard }],

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { JobTypeModule } from '../job-type/job-type.module';
 import {
   JobConfiguration,
   JobConfigurationSchema,
@@ -9,6 +10,7 @@ import { JobConfigurationController } from './job-configuration.controller';
 
 @Module({
   imports: [
+    JobTypeModule,
     MongooseModule.forFeature([
       { name: JobConfiguration.name, schema: JobConfigurationSchema },
     ]),
