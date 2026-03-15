@@ -1,10 +1,14 @@
 import { JobTypeBase } from './job-type-base';
 
-export type JobTypeKey =
-  | 'pump-age'
-  | 'pump-occlusion'
-  | 'insulin-level'
-  | 'sensor-age';
+export const JOB_TYPE_KEYS = [
+  'pump-age',
+  'pump-occlusion',
+  'insulin-level',
+  'sensor-age',
+  'battery-level',
+] as const;
+
+export type JobTypeKey = (typeof JOB_TYPE_KEYS)[number];
 
 // Populated by @JobType() at class-definition time, before the DI container starts.
 export const JOB_TYPE_STORE = new Map<JobTypeKey, typeof JobTypeBase>();

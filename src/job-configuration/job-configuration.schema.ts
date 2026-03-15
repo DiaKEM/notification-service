@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { HydratedDocument } from 'mongoose';
+import { JOB_TYPE_KEYS } from '../job-type/job-type.registry';
 
 export type NotificationProvider = 'pushover' | 'telegram';
 
@@ -35,6 +36,7 @@ export const NotificationConfigSchema =
 export class JobConfiguration {
   @ApiProperty({
     description: 'Key identifying the job type this configuration belongs to',
+    enum: JOB_TYPE_KEYS,
     example: 'pump-age',
   })
   @Prop({ required: true })

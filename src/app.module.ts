@@ -11,6 +11,7 @@ import { TelegramModule } from './telegram/telegram.module';
 import { JobConfigurationModule } from './job-configuration/job-configuration.module';
 import { JobExecutionModule } from './job-execution/job-execution.module';
 import { PumpAgeModule } from './pump-age/pump-age.module';
+import { BatteryLevelModule } from './battery-level/battery-level.module';
 import { JobTypeModule } from './job-type/job-type.module';
 import { JobManagerModule } from './job-manager/job-manager.module';
 import { NotificatorModule } from './notificator/notificator.module';
@@ -32,6 +33,7 @@ import { NotificationCheckerModule } from './notification-checker/notification-c
     JobConfigurationModule,
     JobExecutionModule,
     PumpAgeModule,
+    BatteryLevelModule,
     JobTypeModule,
     JobManagerModule,
     NotificatorModule,

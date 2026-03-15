@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { BatteryLevelModule } from '../battery-level/battery-level.module';
 import { JobManagerModule } from '../job-manager/job-manager.module';
 import { PumpAgeModule } from '../pump-age/pump-age.module';
 import { RunAllCommand } from './run-all.command';
@@ -17,6 +18,7 @@ import { RunJobCommand } from './run-job.command';
     }),
     JobManagerModule,
     PumpAgeModule,
+    BatteryLevelModule,
   ],
   providers: [RunAllCommand, RunJobCommand],
 })

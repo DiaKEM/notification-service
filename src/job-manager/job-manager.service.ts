@@ -21,8 +21,8 @@ export class JobManagerService {
   }
 
   async run(key: JobTypeKey): Promise<void> {
-    const job = this.jobTypeRegistry.resolve(key);
     try {
+      const job = this.jobTypeRegistry.resolve(key);
       const ctx = await job.execute();
       const jobContext = await ctx.get();
       this.logger.log(

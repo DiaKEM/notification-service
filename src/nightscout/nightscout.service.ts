@@ -695,6 +695,25 @@ export class NightscoutService {
     return data;
   }
 
+  /**
+   * Returns the battery percentage (0–100) reported by the most recent
+   * devicestatus entry, or null if no entry or battery field is present.
+   * Reads `uploader.battery` which is populated by most Nightscout uploaders.
+   */
+  async getLatestBatteryLevel(): Promise<number | null> {
+    const statuses = await this.getDeviceStatuses({ count: 1 });
+    const status = statuses[0];
+    if (!status) return null;
+
+    const uploader = status['uploader'] as { battery?: number } | undefined;
+    const battery = uploader?.battery;
+    if (typeof battery === 'number') return battery;
+    const uploaderBattery = status['uploaderBattery'] as number | undefined;
+    if (typeof uploaderBattery === 'number') return uploaderBattery;
+
+    return null;
+  }
+
   /** Returns the most recent "Site Change" treatment and the number of elapsed days since it. */
   async getLastPumpChange(): Promise<{
     treatment: NightscoutTreatment;
