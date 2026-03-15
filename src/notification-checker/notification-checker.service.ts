@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { NotificationConfig } from '../job-configuration/job-configuration.schema';
@@ -7,10 +7,11 @@ import {
   JobExecutionDocument,
 } from '../job-execution/job-execution.schema';
 
-const TIME_POINT_WINDOW_MS = 10 * 60 * 1000; // ±10 minutes
+const TIME_POINT_WINDOW_MS = 3 * 60 * 1000; // ±10 minutes
 
 @Injectable()
 export class NotificationCheckerService {
+  private readonly logger = new Logger(NotificationCheckerService.name);
   constructor(
     @InjectModel(JobExecution.name)
     private readonly model: Model<JobExecutionDocument>,

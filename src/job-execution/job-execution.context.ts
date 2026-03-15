@@ -4,6 +4,7 @@ import { LogLevel } from '../log/log.schema';
 import * as jobExecutionSchema from './job-execution.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { NotificatorPayload } from '../notificator/notificator-provider-base';
+import { JobExecution, JobExecutionDocument } from './job-execution.schema';
 
 export class JobExecutionContext {
   constructor(
@@ -14,6 +15,16 @@ export class JobExecutionContext {
 
   private get id(): string {
     return this.document._id.toString();
+  }
+
+  async get(): Promise<JobExecutionDocument> {
+    const doc = await this.model.findOne({ _id: this.id }).exec();
+
+    if (!doc) {
+      throw new Error(`Job execution not found: ${this.id}`);
+    }
+
+    return doc;
   }
 
   // ── Logging ────────────────────────────────────────────────────────────────

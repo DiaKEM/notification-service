@@ -24,16 +24,17 @@ export class JobManagerService {
     const job = this.jobTypeRegistry.resolve(key);
     try {
       const ctx = await job.execute();
+      const jobContext = await ctx.get();
       this.logger.log(
-        `Job "${key}" completed with status "${ctx.document.status}" — ${ctx.document.logs.length} log(s)`,
+        `Job "${key}" completed with status "${jobContext.status}" — ${jobContext.logs.length} log(s)`,
       );
 
-      if (!ctx.document.needsNotification) {
+      if (!jobContext.needsNotification) {
         this.logger.log(`Job "${key}" did not need notification`);
         return;
       }
 
-      const jobConfiguration = ctx.document.jobConfiguration;
+      const jobConfiguration = jobContext.jobConfiguration;
       if (!jobConfiguration) {
         this.logger.warn(
           `Job "${key}" did not have a notification configuration`,
@@ -41,22 +42,21 @@ export class JobManagerService {
         return;
       }
 
-      if (!ctx.document.notification) {
+      if (!jobContext.notification) {
         this.logger.warn(`Job "${key}" did not have a notification payload`);
         return;
       }
 
-      const dueNotifications = await this.notificationChecker.check(
-        ctx.document,
-      );
+      const dueNotifications = await this.notificationChecker.check(jobContext);
       if (!dueNotifications.length) {
         this.logger.log(`Job "${key}" notification not due yet — skipping`);
         return;
       }
+      this.logger.log(`Handling ${JSON.stringify(dueNotifications)} now...`);
 
       await this.notificationManager.sendMessage(
         jobConfiguration.provider,
-        ctx.document.notification,
+        jobContext.notification,
       );
       await ctx.setNotificationSent();
     } catch (err: unknown) {
