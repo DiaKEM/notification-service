@@ -12,10 +12,22 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import {
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiSecurity,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JobTypeRegistryService } from '../job-type/job-type-registry.service';
 import { JobConfiguration } from './job-configuration.schema';
 import { JobConfigurationService } from './job-configuration.service';
 
+@ApiTags('job-configurations')
+@ApiSecurity('X-Api-Key')
 @Controller('/api/job-configurations')
 export class JobConfigurationController {
   constructor(
@@ -24,6 +36,17 @@ export class JobConfigurationController {
   ) {}
 
   @Get()
+  @ApiOperation({
+    summary: 'List job configurations',
+    description: 'Returns all job configurations, optionally filtered by job type.',
+  })
+  @ApiQuery({
+    name: 'jobTypeKey',
+    required: false,
+    description: 'Filter results to a specific job type',
+    example: 'pump-age',
+  })
+  @ApiOkResponse({ type: [JobConfiguration] })
   findAll(@Query('jobTypeKey') jobTypeKey?: string) {
     if (jobTypeKey) {
       return this.service.findByJobTypeKey(jobTypeKey);
@@ -32,6 +55,12 @@ export class JobConfigurationController {
   }
 
   @Post()
+  @ApiOperation({
+    summary: 'Create a job configuration',
+    description:
+      'Creates a new configuration for a registered job type. The jobTypeKey must match one of the currently registered job types.',
+  })
+  @ApiOkResponse({ type: JobConfiguration })
   create(@Body() body: JobConfiguration) {
     const keys = this.jobTypeRegistry.getRegisteredKeys();
     if (!keys.includes(body.jobTypeKey as never)) {
@@ -43,6 +72,13 @@ export class JobConfigurationController {
   }
 
   @Patch(':id')
+  @ApiOperation({
+    summary: 'Update a job configuration',
+    description: 'Partially updates an existing job configuration by its ID.',
+  })
+  @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the job configuration' })
+  @ApiOkResponse({ type: JobConfiguration })
+  @ApiNotFoundResponse({ description: 'Job configuration not found' })
   async update(
     @Param('id') id: string,
     @Body() body: Partial<JobConfiguration>,
@@ -63,6 +99,12 @@ export class JobConfigurationController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete a job configuration',
+    description: 'Permanently removes a job configuration by its ID.',
+  })
+  @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the job configuration' })
+  @ApiNoContentResponse({ description: 'Successfully deleted' })
   delete(@Param('id') id: string) {
     return this.service.delete(id);
   }
