@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Log } from '../log/log.schema';
-import { JobExecution, JobExecutionDocument, ExecutionStatus } from './job-execution.schema';
+import { JobExecution, JobExecutionDocument } from './job-execution.schema';
+import { JobConfiguration } from '../job-configuration/job-configuration.schema';
+import { JobExecutionContext } from './job-execution.context';
 
 @Injectable()
 export class JobExecutionService {
@@ -11,37 +12,15 @@ export class JobExecutionService {
     private readonly model: Model<JobExecutionDocument>,
   ) {}
 
-  create(
-    jobTypeKey: string,
-    jobConfigurationId?: string,
-  ): Promise<JobExecutionDocument> {
-    return this.model.create({
+  async create(jobTypeKey: string): Promise<JobExecutionContext> {
+    const document = await this.model.create({
       jobTypeKey,
-      ...(jobConfigurationId && { jobConfigurationId }),
       startedAt: new Date(),
       status: 'running',
+      needsNotification: false,
       logs: [],
     });
-  }
-
-  async complete(
-    id: string,
-    logs: Log[],
-    status: Exclude<ExecutionStatus, 'running'>,
-  ): Promise<JobExecutionDocument | null> {
-    return this.model
-      .findByIdAndUpdate(
-        id,
-        { $set: { logs, status, finishedAt: new Date() } },
-        { new: true },
-      )
-      .exec();
-  }
-
-  async appendLog(id: string, log: Log): Promise<void> {
-    await this.model
-      .findByIdAndUpdate(id, { $push: { logs: log } })
-      .exec();
+    return new JobExecutionContext(document, this.model);
   }
 
   findByJobType(jobTypeKey: string): Promise<JobExecutionDocument[]> {

@@ -1,5 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
+import {
+  JobConfiguration,
+  JobConfigurationSchema,
+} from '../job-configuration/job-configuration.schema';
 import { Log, LogSchema } from '../log/log.schema';
 
 export type ExecutionStatus = 'running' | 'success' | 'failed';
@@ -9,11 +13,17 @@ export class JobExecution {
   @Prop({ required: true })
   jobTypeKey: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'JobConfiguration' })
-  jobConfigurationId?: Types.ObjectId;
+  @Prop({ type: JobConfigurationSchema })
+  jobConfiguration?: JobConfiguration;
 
   @Prop({ type: [LogSchema], default: [] })
   logs: Log[];
+
+  @Prop()
+  currentValue: string;
+
+  @Prop()
+  needsNotification: boolean;
 
   @Prop({ required: true })
   startedAt: Date;
@@ -23,7 +33,7 @@ export class JobExecution {
 
   @Prop({
     required: true,
-    enum: ['running', 'success', 'failed'],
+    enum: ['running', 'success', 'skipped', 'failed'],
     default: 'running',
   })
   status: ExecutionStatus;

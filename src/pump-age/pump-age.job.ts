@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { JobConfigurationDocument } from '../job-configuration/job-configuration.schema';
-import { Log, LogLevel } from '../log/log.schema';
+import { JobConfigurationService } from '../job-configuration/job-configuration.service';
+import { JobExecutionContext } from '../job-execution/job-execution.context';
+import { JobExecutionService } from '../job-execution/job-execution.service';
 import { NightscoutService } from '../nightscout/nightscout.service';
 import { JobType } from '../job-type/job-type.decorator';
 import { JobTypeBase } from '../job-type/job-type-base';
-import { JobConfigurationService } from '../job-configuration/job-configuration.service';
 
 export const PUMP_AGE_JOB_KEY = 'pump-age';
 
@@ -14,72 +14,65 @@ export class PumpAgeJob extends JobTypeBase {
   constructor(
     private readonly nightscout: NightscoutService,
     private readonly jobConfigService: JobConfigurationService,
+    private readonly jobExecutionService: JobExecutionService,
   ) {
     super();
   }
 
-  async execute(): Promise<Log[]> {
-    const logs: Log[] = [];
+  async execute(): Promise<JobExecutionContext> {
+    const ctx = await this.jobExecutionService.create(PUMP_AGE_JOB_KEY);
+    try {
+      const treatment = await this.nightscout.getLastPumpChange();
+      if (!treatment) {
+        await ctx.warn('No pump change found in Nightscout');
+        await ctx.skipped();
+        return ctx;
+      }
 
-    const treatment = await this.nightscout.getLastPumpChange();
-    if (!treatment) {
-      logs.push(this.log(LogLevel.WARNING, 'No pump change found'));
-      return logs;
-    }
-    const pumpAge = treatment?.elapsedDays;
-    if (pumpAge === null) {
-      logs.push(
-        this.log(
-          LogLevel.WARNING,
-          'Could not determine pump age from device status',
-        ),
+      const { elapsedDays: pumpAge } = treatment;
+      if (pumpAge === undefined) {
+        await ctx.warn('Pump change has no elapsed days');
+        await ctx.skipped();
+        return ctx;
+      }
+
+      await ctx.setCurrentValue(pumpAge.toFixed(2));
+
+      const config = await this.jobConfigService.findNextLower(
+        PUMP_AGE_JOB_KEY,
+        pumpAge,
       );
-      return logs;
-    }
+      if (config) await ctx.setJobConfiguration(config);
 
-    const config = await this.jobConfigService.findNextLower(
-      PUMP_AGE_JOB_KEY,
-      pumpAge,
-    );
+      if (!config) {
+        await ctx.info(
+          `No configuration matches pump age ${pumpAge.toFixed(2)}d`,
+        );
+        await ctx.complete();
+        return ctx;
+      }
 
-    if (!config) {
-      logs.push(
-        this.log(
-          LogLevel.INFO,
-          `No configuration found for pump age threshold ${pumpAge.toFixed(2)}`,
-        ),
-      );
+      const age = `${pumpAge.toFixed(2)}d`;
+      const thr = `${config.threshold}d`;
+      await ctx.info(`Pump age: ${age} (threshold: ${thr})`);
 
-      return logs;
-    }
+      if (pumpAge >= config.threshold) {
+        await ctx.warn(
+          `Pump age ${age} exceeds threshold ${thr} — notification required`,
+        );
+      } else {
+        await ctx.info(
+          `Pump age ${age} is below threshold ${thr} — no action needed`,
+        );
+      }
 
-    logs.push(
-      this.log(
-        LogLevel.INFO,
-        `Pump age: ${pumpAge.toFixed(2)} days (threshold: ${config.threshold})`,
-      ),
-    );
-
-    if (pumpAge >= config.threshold) {
-      logs.push(
-        this.log(
-          LogLevel.WARNING,
-          `Pump age ${pumpAge.toFixed(2)}d exceeds threshold ${config.threshold}d — notification required`,
-        ),
-      );
-    } else {
-      logs.push(
-        this.log(
-          LogLevel.INFO,
-          `Pump age ${pumpAge.toFixed(2)}d is below threshold ${config.threshold}d — no action needed`,
-        ),
-      );
+      await ctx.needsNotification();
+      await ctx.complete();
+    } catch (err: unknown) {
+      await ctx.error(err?.toString() || 'Unknown error');
+      await ctx.fail();
     }
 
-    return logs;
-  }
-
-  private log(level: LogLevel, message: string): Log {
-    return { timestamp: new Date(), message, level };
+    return ctx;
   }
 }
