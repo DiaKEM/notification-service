@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JobTypeRegistryService } from '../job-type/job-type-registry.service';
 import { JobTypeKey } from '../job-type/job-type.registry';
-import { JobExecutionService } from '../job-execution/job-execution.service';
 import { NotificationManagerService } from '../notification-manager/notification-manager.service';
+import { NotificationCheckerService } from '../notification-checker/notification-checker.service';
 
 @Injectable()
 export class JobManagerService {
@@ -11,6 +11,7 @@ export class JobManagerService {
   constructor(
     private readonly jobTypeRegistry: JobTypeRegistryService,
     private readonly notificationManager: NotificationManagerService,
+    private readonly notificationChecker: NotificationCheckerService,
   ) {}
 
   async runAll(): Promise<void> {
@@ -44,7 +45,19 @@ export class JobManagerService {
         this.logger.warn(`Job "${key}" did not have a notification payload`);
         return;
       }
-      await this.notificationManager.send(ctx.document.notification);
+
+      const dueNotifications = await this.notificationChecker.check(
+        ctx.document,
+      );
+      if (!dueNotifications.length) {
+        this.logger.log(`Job "${key}" notification not due yet — skipping`);
+        return;
+      }
+
+      await this.notificationManager.sendMessage(
+        jobConfiguration.provider,
+        ctx.document.notification,
+      );
       await ctx.setNotificationSent();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

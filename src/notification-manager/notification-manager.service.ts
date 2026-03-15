@@ -1,20 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  NotificatorPayload,
-  NotificatorProviderBase,
-} from '../notificator/notificator-provider-base';
+import { NotificatorPayload } from '../notificator/notificator-provider-base';
 import { NotificatorProviderRegistryService } from '../notificator/notificator-provider-registry.service';
+import { NotificatorProviderKey } from '../notificator/notificator-provider.registry';
 
 @Injectable()
-export class NotificationManagerService extends NotificatorProviderBase {
+export class NotificationManagerService {
   private readonly logger = new Logger(NotificationManagerService.name);
 
-  constructor(private readonly registry: NotificatorProviderRegistryService) {
-    super();
-  }
+  constructor(private readonly registry: NotificatorProviderRegistryService) {}
 
-  async send(payload: NotificatorPayload): Promise<void> {
-    const keys = this.registry.getRegisteredKeys();
+  async sendMessage(
+    providers: NotificatorProviderKey[],
+    payload: NotificatorPayload,
+  ): Promise<void> {
+    const keys = this.registry
+      .getRegisteredKeys()
+      .filter((key) => providers.includes(key));
     await Promise.all(
       keys.map(async (key) => {
         try {

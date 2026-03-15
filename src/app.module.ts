@@ -15,6 +15,7 @@ import { JobTypeModule } from './job-type/job-type.module';
 import { JobManagerModule } from './job-manager/job-manager.module';
 import { NotificatorModule } from './notificator/notificator.module';
 import { NotificationManagerModule } from './notification-manager/notification-manager.module';
+import { NotificationCheckerModule } from './notification-checker/notification-checker.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { NotificationManagerModule } from './notification-manager/notification-m
     JobManagerModule,
     NotificatorModule,
     NotificationManagerModule,
+    NotificationCheckerModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ApiKeyGuard }],
