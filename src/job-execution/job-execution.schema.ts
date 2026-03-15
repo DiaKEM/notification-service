@@ -29,7 +29,7 @@ export class JobExecution {
   @Prop()
   notificationSentAt?: Date;
 
-  @Prop()
+  @Prop({ type: Object })
   notification?: notificatorProviderBase.NotificatorPayload;
 
   @Prop({ required: true })
