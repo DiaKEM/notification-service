@@ -21,6 +21,19 @@ export class JobManagerService {
       this.logger.log(
         `Job "${key}" completed with status "${ctx.document.status}" — ${ctx.document.logs.length} log(s)`,
       );
+
+      if (!ctx.document.needsNotification) {
+        this.logger.log(`Job "${key}" did not need notification`);
+        return;
+      }
+
+      const jobConfiguration = ctx.document.jobConfiguration;
+      if (!jobConfiguration) {
+        this.logger.warn(
+          `Job "${key}" did not have a notification configuration`,
+        );
+        return;
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.error(`Job "${key}" threw an unhandled error: ${message}`);

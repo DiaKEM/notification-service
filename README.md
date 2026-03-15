@@ -164,6 +164,65 @@ npm run test:check-telegram-api
 
 The connection check sends a test message to the configured chat — you should see it arrive on your device.
 
+## CLI
+The CLI is a simple command-line interface that allows you to run specific jobs.
+Usage:
+### development
+npm run cli -- run:all
+npm run cli -- run pump-age
+
+### production (after nest build)
+npm run cli:prod -- run:all
+npm run cli:prod -- run pump-age
+
+The CliModule is intentionally separate from AppModule — it doesn't load the HTTP server, guards, or any web-related modules. It only boots what's needed to resolve job types and persist executions.
+
+## Notificators
+
+## Low Battery
+
+Check if the battery is low and send a notification:
+
+Make threshold configurable: 51%
+Each 15 Minutes
+Below: 30%
+Each 5 Minutes
+Below: 15
+Each 1 Minute
+
+One time static at 20:00
+
+## Low insulin
+
+Low insulin threshold: 80IE
+Each 5 hours
+Below: 50IE
+Each 1 hour
+Below: 25
+Each 30 minutes
+
+One time static at 20:00
+
+## Pump change
+
+Notify if pump is older than 4 days.
+All 5 hours.
+One time static at 20:00.
+Older than 4.5 days:
+All 2 hours.
+Older than 5 days:
+All 1 hour.
+Older than 6 days:
+All 30 minutes.
+
+## Sensor expiration
+Older than 7 days:
+All 3 hours
+Older than 8 days:
+All 2 hours
+Older than 8.75 days:
+All 1 hour
+Older than 10 days:
 
 ## License
 

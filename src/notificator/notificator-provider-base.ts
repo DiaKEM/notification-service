@@ -1,11 +1,11 @@
 import { NotificationPriority } from '../job-configuration/job-configuration.schema';
 
-export interface Notification {
+export interface NotificatorPayload {
   title?: string;
   message: string;
   priority: NotificationPriority;
 }
 
-export abstract class NotificationProviderBase {
-  abstract send(notification: Notification): Promise<void>;
+export abstract class NotificatorProviderBase {
+  abstract send(payload: NotificatorPayload): Promise<void>;
 }

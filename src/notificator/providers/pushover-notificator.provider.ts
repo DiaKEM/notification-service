@@ -4,11 +4,11 @@ import {
   PushoverPriority,
   PushoverService,
 } from '../../pushover/pushover.service';
-import { NotificationProvider } from '../notification.decorator';
+import { NotificatorProvider } from '../notificator.decorator';
 import {
-  Notification,
-  NotificationProviderBase,
-} from '../notification-provider-base';
+  NotificatorPayload,
+  NotificatorProviderBase,
+} from '../notificator-provider-base';
 
 const PRIORITY_MAP: Record<NotificationPriority, PushoverPriority> = {
   [NotificationPriority.LOW]: PushoverPriority.Low,
@@ -18,17 +18,17 @@ const PRIORITY_MAP: Record<NotificationPriority, PushoverPriority> = {
 };
 
 @Injectable()
-@NotificationProvider('pushover')
-export class PushoverNotificationProvider extends NotificationProviderBase {
+@NotificatorProvider('pushover')
+export class PushoverNotificatorProvider extends NotificatorProviderBase {
   constructor(private readonly pushover: PushoverService) {
     super();
   }
 
-  async send(notification: Notification): Promise<void> {
+  async send(payload: NotificatorPayload): Promise<void> {
     await this.pushover.sendMessage({
-      message: notification.message,
-      title: notification.title,
-      priority: PRIORITY_MAP[notification.priority],
+      message: payload.message,
+      title: payload.title,
+      priority: PRIORITY_MAP[payload.priority],
     });
   }
 }
