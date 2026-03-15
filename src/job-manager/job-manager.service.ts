@@ -1,12 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JobTypeRegistryService } from '../job-type/job-type-registry.service';
 import { JobTypeKey } from '../job-type/job-type.registry';
+import { JobExecutionService } from '../job-execution/job-execution.service';
+import { NotificationManagerService } from '../notification-manager/notification-manager.service';
 
 @Injectable()
 export class JobManagerService {
   private readonly logger = new Logger(JobManagerService.name);
 
-  constructor(private readonly jobTypeRegistry: JobTypeRegistryService) {}
+  constructor(
+    private readonly jobTypeRegistry: JobTypeRegistryService,
+    private readonly notificationManager: NotificationManagerService,
+  ) {}
 
   async runAll(): Promise<void> {
     const keys = this.jobTypeRegistry.getRegisteredKeys();
@@ -34,6 +39,13 @@ export class JobManagerService {
         );
         return;
       }
+
+      if (!ctx.document.notification) {
+        this.logger.warn(`Job "${key}" did not have a notification payload`);
+        return;
+      }
+      await this.notificationManager.send(ctx.document.notification);
+      await ctx.setNotificationSent();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.error(`Job "${key}" threw an unhandled error: ${message}`);

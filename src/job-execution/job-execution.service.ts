@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { JobExecution, JobExecutionDocument } from './job-execution.schema';
+import {
+  ExecutionStatus,
+  JobExecution,
+  JobExecutionDocument,
+} from './job-execution.schema';
 import { JobConfiguration } from '../job-configuration/job-configuration.schema';
 import { JobExecutionContext } from './job-execution.context';
 
@@ -23,11 +27,54 @@ export class JobExecutionService {
     return new JobExecutionContext(document, this.model);
   }
 
+  find(
+    filter: {
+      jobTypeKey?: string;
+      jobConfiguration?: string;
+      status?: ExecutionStatus;
+      needsNotification?: boolean;
+      from?: Date;
+      to?: Date;
+      limit?: number;
+    } = {},
+  ): Promise<JobExecutionDocument[]> {
+    const query: Record<string, unknown> = {};
+
+    if (filter.jobTypeKey) query['jobTypeKey'] = filter.jobTypeKey;
+    if (filter.status) query['status'] = filter.status;
+    if (filter.jobConfiguration)
+      query['jobConfiguration.id'] = filter.jobConfiguration;
+    if (filter.needsNotification !== undefined)
+      query['needsNotification'] = filter.needsNotification;
+    if (filter.from || filter.to) {
+      query['startedAt'] = {
+        ...(filter.from && { $gte: filter.from }),
+        ...(filter.to && { $lte: filter.to }),
+      };
+    }
+
+    return this.model
+      .find(query)
+      .sort({ startedAt: -1 })
+      .limit(filter.limit ?? 100)
+      .exec();
+  }
+
+  findLastJobExecution(
+    jobTypeKey: string,
+    jobConfiguration: string,
+  ): Promise<JobExecutionDocument | null> {
+    return this.model
+      .findOne({ jobTypeKey, 'jobConfiguration._id': jobConfiguration })
+      .sort({ startedAt: -1 })
+      .exec();
+  }
+
   findByJobType(jobTypeKey: string): Promise<JobExecutionDocument[]> {
-    return this.model.find({ jobTypeKey }).sort({ startedAt: -1 }).exec();
+    return this.find({ jobTypeKey });
   }
 
   findLatest(limit = 20): Promise<JobExecutionDocument[]> {
-    return this.model.find().sort({ startedAt: -1 }).limit(limit).exec();
+    return this.find({ limit });
   }
 }

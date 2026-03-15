@@ -66,7 +66,11 @@ export class PumpAgeJob extends JobTypeBase {
         );
       }
 
-      await ctx.needsNotification();
+      await ctx.needsNotification({
+        title: 'Pump age alarm!',
+        message: `Pump is currently ${age} old`,
+        priority: config.priority,
+      });
       await ctx.complete();
     } catch (err: unknown) {
       await ctx.error(err?.toString() || 'Unknown error');

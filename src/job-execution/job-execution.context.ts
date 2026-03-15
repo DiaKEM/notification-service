@@ -3,6 +3,7 @@ import { JobConfiguration } from '../job-configuration/job-configuration.schema'
 import { LogLevel } from '../log/log.schema';
 import * as jobExecutionSchema from './job-execution.schema';
 import { InjectModel } from '@nestjs/mongoose';
+import { NotificatorPayload } from '../notificator/notificator-provider-base';
 
 export class JobExecutionContext {
   constructor(
@@ -47,6 +48,12 @@ export class JobExecutionContext {
       .exec();
   }
 
+  async setNotificationSent(): Promise<void> {
+    await this.model
+      .findByIdAndUpdate(this.id, { $set: { notificationSentAt: new Date() } })
+      .exec();
+  }
+
   // ── Completion ─────────────────────────────────────────────────────────────
 
   async complete(): Promise<void> {
@@ -73,10 +80,10 @@ export class JobExecutionContext {
       .exec();
   }
 
-  async needsNotification(): Promise<void> {
+  async needsNotification(notification: NotificatorPayload): Promise<void> {
     await this.model
       .findByIdAndUpdate(this.id, {
-        $set: { needsNotification: true, finishedAt: new Date() },
+        $set: { needsNotification: true, notification },
       })
       .exec();
   }

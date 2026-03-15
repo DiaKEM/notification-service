@@ -5,6 +5,7 @@ import {
   JobConfigurationSchema,
 } from '../job-configuration/job-configuration.schema';
 import { Log, LogSchema } from '../log/log.schema';
+import * as notificatorProviderBase from '../notificator/notificator-provider-base';
 
 export type ExecutionStatus = 'running' | 'success' | 'failed';
 
@@ -24,6 +25,12 @@ export class JobExecution {
 
   @Prop()
   needsNotification: boolean;
+
+  @Prop()
+  notificationSentAt?: Date;
+
+  @Prop()
+  notification?: notificatorProviderBase.NotificatorPayload;
 
   @Prop({ required: true })
   startedAt: Date;
