@@ -5,6 +5,9 @@
 ```bash
 $ npm install
 ```
+## API documentation
+
+Start the backend and open http://localhost:3000/api/docs.
 
 ## Compile and run the project
 

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { JobConfigurationService } from '../job-configuration/job-configuration.service';
-import { JobExecutionContext } from '../job-execution/job-execution.context';
-import { JobExecutionService } from '../job-execution/job-execution.service';
-import { NightscoutService } from '../nightscout/nightscout.service';
-import { JobType } from '../job-type/job-type.decorator';
-import { JobTypeBase } from '../job-type/job-type-base';
+import { JobConfigurationService } from '../../job-configuration/job-configuration.service';
+import { JobExecutionContext } from '../../job-execution/job-execution.context';
+import { JobExecutionService } from '../../job-execution/job-execution.service';
+import { NightscoutService } from '../../nightscout/nightscout.service';
+import { JobType } from '../../job-type/job-type.decorator';
+import { JobTypeBase } from '../../job-type/job-type-base';
 
 export const BATTERY_LEVEL_JOB_KEY = 'battery-level';
 

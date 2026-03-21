@@ -10,8 +10,10 @@ import { PushoverModule } from './pushover/pushover.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { JobConfigurationModule } from './job-configuration/job-configuration.module';
 import { JobExecutionModule } from './job-execution/job-execution.module';
-import { PumpAgeModule } from './pump-age/pump-age.module';
-import { BatteryLevelModule } from './battery-level/battery-level.module';
+import { PumpAgeModule } from './jobs/pump-age/pump-age.module';
+import { BatteryLevelModule } from './jobs/battery-level/battery-level.module';
+import { InsulinLevelModule } from './jobs/insulin-level/insulin-level.module';
+import { SensorAgeModule } from './jobs/sensor-age/sensor-age.module';
 import { JobTypeModule } from './job-type/job-type.module';
 import { JobManagerModule } from './job-manager/job-manager.module';
 import { NotificatorModule } from './notificator/notificator.module';
@@ -34,6 +36,8 @@ import { NotificationCheckerModule } from './notification-checker/notification-c
     JobExecutionModule,
     PumpAgeModule,
     BatteryLevelModule,
+    InsulinLevelModule,
+    SensorAgeModule,
     JobTypeModule,
     JobManagerModule,
     NotificatorModule,

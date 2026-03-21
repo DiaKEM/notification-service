@@ -714,6 +714,42 @@ export class NightscoutService {
     return null;
   }
 
+  /**
+   * Returns the insulin reservoir level (units remaining) from the most recent
+   * devicestatus entry, or null if not present.
+   * Reads `pump.reservoir` which is populated by Loop and AndroidAPS uploaders.
+   */
+  async getLatestInsulinLevel(): Promise<number | null> {
+    const statuses = await this.getDeviceStatuses({ count: 1 });
+    const status = statuses[0];
+    if (!status) return null;
+
+    const pump = status['pump'] as { reservoir?: number } | undefined;
+    if (typeof pump?.reservoir === 'number') return pump.reservoir;
+
+    return null;
+  }
+
+  /** Returns the most recent "Sensor Change" treatment and the number of elapsed days since it. */
+  async getLastSensorChange(): Promise<{
+    treatment: NightscoutTreatment;
+    elapsedDays: number;
+  } | null> {
+    const treatments = await this.getTreatments({
+      find: { eventType: 'Sensor Change', created_at: { $gte: '2020-01-01' } },
+      count: 1,
+    });
+    const treatment = treatments[0];
+    if (!treatment?.created_at) return null;
+
+    const changedAt = new Date(treatment.created_at);
+    if (isNaN(changedAt.getTime())) return null;
+
+    const elapsedDays =
+      (Date.now() - changedAt.getTime()) / (1000 * 60 * 60 * 24);
+    return { treatment, elapsedDays };
+  }
+
   /** Returns the most recent "Site Change" treatment and the number of elapsed days since it. */
   async getLastPumpChange(): Promise<{
     treatment: NightscoutTreatment;
