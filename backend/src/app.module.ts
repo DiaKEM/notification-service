@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ApiKeyGuard } from './auth/api-key.guard';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { RolesGuard } from './auth/roles.guard';
+import { UsersModule } from './users/users.module';
 import { NightscoutModule } from './nightscout/nightscout.module';
 import { PushoverModule } from './pushover/pushover.module';
 import { TelegramModule } from './telegram/telegram.module';
@@ -30,6 +33,8 @@ import { NotificationCheckerModule } from './notification-checker/notification-c
         uri: config.getOrThrow<string>('MONGODB_URI'),
       }),
     }),
+    AuthModule,
+    UsersModule,
     NightscoutModule,
     PushoverModule,
     TelegramModule,
@@ -47,6 +52,10 @@ import { NotificationCheckerModule } from './notification-checker/notification-c
     NotificationCheckerModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ApiKeyGuard }],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}

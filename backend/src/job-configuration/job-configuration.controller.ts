@@ -13,6 +13,7 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -22,12 +23,14 @@ import {
   ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { JobTypeRegistryService } from '../job-type/job-type-registry.service';
 import { JobConfiguration } from './job-configuration.schema';
 import { JobConfigurationService } from './job-configuration.service';
 
 @ApiTags('job-configurations')
 @ApiSecurity('X-Api-Key')
+@ApiBearerAuth()
 @Controller('/api/job-configurations')
 export class JobConfigurationController {
   constructor(
@@ -55,6 +58,7 @@ export class JobConfigurationController {
   }
 
   @Post()
+  @Roles('admin')
   @ApiOperation({
     summary: 'Create a job configuration',
     description:
@@ -72,6 +76,7 @@ export class JobConfigurationController {
   }
 
   @Patch(':id')
+  @Roles('admin')
   @ApiOperation({
     summary: 'Update a job configuration',
     description: 'Partially updates an existing job configuration by its ID.',
@@ -98,6 +103,7 @@ export class JobConfigurationController {
   }
 
   @Delete(':id')
+  @Roles('admin')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a job configuration',

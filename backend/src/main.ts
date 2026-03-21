@@ -10,6 +10,7 @@ async function bootstrap() {
     .setDescription('API for managing job configurations and executions')
     .setVersion('1.0')
     .addApiKey({ type: 'apiKey', in: 'header', name: 'X-Api-Key' }, 'X-Api-Key')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
