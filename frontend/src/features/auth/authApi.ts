@@ -13,6 +13,7 @@ export interface LoginResponse {
   }
 }
 
+// Auth endpoints are public — no need for the shared auth baseQuery
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),

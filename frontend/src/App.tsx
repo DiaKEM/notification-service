@@ -1,21 +1,22 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from '@/pages/LoginPage'
-import HomePage from '@/pages/HomePage'
+import JobConfigurationPage from '@/pages/JobConfigurationPage'
+import JobExecutionPage from '@/pages/JobExecutionPage'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import AppLayout from '@/components/layout/AppLayout'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route index element={<Navigate to="/jobs/configuration" replace />} />
+            <Route path="/jobs/configuration" element={<JobConfigurationPage />} />
+            <Route path="/jobs/execution" element={<JobExecutionPage />} />
+          </Route>
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

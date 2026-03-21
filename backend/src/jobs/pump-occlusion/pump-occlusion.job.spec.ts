@@ -10,6 +10,7 @@ const makeCtx = () => ({
   fail: jest.fn().mockResolvedValue(undefined),
   needsNotification: jest.fn().mockResolvedValue(undefined),
   setJobConfiguration: jest.fn().mockResolvedValue(undefined),
+  setCurrentValue: jest.fn().mockResolvedValue(undefined),
 });
 
 const makeConfig = () => ({

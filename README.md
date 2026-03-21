@@ -9,6 +9,10 @@ $ npm install
 
 Start the backend and open http://localhost:3000/api/docs.
 
+## Create user
+
+npm run cli create-user admin admin --roles admin,user
+
 ## Compile and run the project
 
 ```bash

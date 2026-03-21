@@ -1,0 +1,48 @@
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { baseQueryWithAuth } from '@/app/baseQuery'
+
+export type ExecutionStatus = 'running' | 'success' | 'skipped' | 'failed'
+
+export interface JobExecution {
+  _id: string
+  jobTypeKey: string
+  status: ExecutionStatus
+  currentValue?: string
+  startedAt: string
+  finishedAt?: string
+  needsNotification: boolean
+  notificationSentAt?: string
+  logs: Array<{ timestamp: string; level: 'INFO' | 'WARNING' | 'ERROR'; message: string }>
+}
+
+export interface JobExecutionFilters {
+  jobTypeKey?: string
+  status?: string
+  from?: string
+  to?: string
+  needsNotification?: string
+  limit?: number
+}
+
+export const jobExecutionApi = createApi({
+  reducerPath: 'jobExecutionApi',
+  baseQuery: baseQueryWithAuth,
+  tagTypes: ['JobExecution'],
+  endpoints: (builder) => ({
+    getJobExecutions: builder.query<JobExecution[], JobExecutionFilters>({
+      query: (filters) => {
+        const params = new URLSearchParams()
+        if (filters.jobTypeKey) params.set('jobTypeKey', filters.jobTypeKey)
+        if (filters.status) params.set('status', filters.status)
+        if (filters.from) params.set('from', filters.from)
+        if (filters.to) params.set('to', filters.to)
+        if (filters.needsNotification) params.set('needsNotification', filters.needsNotification)
+        if (filters.limit) params.set('limit', String(filters.limit))
+        return `/job-executions?${params.toString()}`
+      },
+      providesTags: ['JobExecution'],
+    }),
+  }),
+})
+
+export const { useGetJobExecutionsQuery } = jobExecutionApi

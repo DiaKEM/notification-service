@@ -1,14 +1,29 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { authApi } from '@/features/auth/authApi'
+import { jobExecutionApi } from '@/features/job-execution/jobExecutionApi'
 import authReducer from '@/features/auth/authSlice'
+import { loadAuthState, saveAuthState } from './authPersistence'
+
+const persistedAuth = loadAuthState()
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     [authApi.reducerPath]: authApi.reducer,
+    [jobExecutionApi.reducerPath]: jobExecutionApi.reducer,
   },
+  preloadedState: persistedAuth
+    ? { auth: { token: persistedAuth.token, username: persistedAuth.username, isAuthenticated: true } }
+    : undefined,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authApi.middleware),
+    getDefaultMiddleware()
+      .concat(authApi.middleware)
+      .concat(jobExecutionApi.middleware),
+})
+
+store.subscribe(() => {
+  const { token, username } = store.getState().auth
+  saveAuthState(token && username ? { token, username } : null)
 })
 
 export type RootState = ReturnType<typeof store.getState>

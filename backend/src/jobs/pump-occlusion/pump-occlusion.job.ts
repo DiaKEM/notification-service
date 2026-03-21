@@ -26,6 +26,8 @@ export class PumpOcclusionJob extends JobTypeBase {
     try {
       const occlusionDetected = await this.nightscout.getLatestPumpOcclusion();
 
+      await ctx.setCurrentValue(String(!occlusionDetected));
+
       if (!occlusionDetected) {
         await ctx.info('No pump occlusion detected — no action needed');
         await ctx.complete();
