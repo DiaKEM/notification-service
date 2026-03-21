@@ -1,6 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { authApi } from '@/features/auth/authApi'
 import { jobExecutionApi } from '@/features/job-execution/jobExecutionApi'
+import { jobConfigurationApi } from '@/features/job-configuration/jobConfigurationApi'
+import { usersApi } from '@/features/users/usersApi'
 import authReducer from '@/features/auth/authSlice'
 import { loadAuthState, saveAuthState } from './authPersistence'
 
@@ -11,6 +13,8 @@ export const store = configureStore({
     auth: authReducer,
     [authApi.reducerPath]: authApi.reducer,
     [jobExecutionApi.reducerPath]: jobExecutionApi.reducer,
+    [jobConfigurationApi.reducerPath]: jobConfigurationApi.reducer,
+    [usersApi.reducerPath]: usersApi.reducer,
   },
   preloadedState: persistedAuth
     ? { auth: { token: persistedAuth.token, username: persistedAuth.username, isAuthenticated: true } }
@@ -18,7 +22,9 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(authApi.middleware)
-      .concat(jobExecutionApi.middleware),
+      .concat(jobExecutionApi.middleware)
+      .concat(jobConfigurationApi.middleware)
+      .concat(usersApi.middleware),
 })
 
 store.subscribe(() => {

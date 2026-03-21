@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { label: 'Job Configurations', to: '/jobs/configuration' },
   { label: 'Job Executions', to: '/jobs/execution' },
+  { label: 'Users', to: '/users' },
 ]
 
 export default function Navbar() {
