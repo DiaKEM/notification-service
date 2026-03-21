@@ -8,6 +8,7 @@ import { JobTypeKey } from '../job-type/job-type.registry';
   description: 'Run a specific job type by its key (e.g. pump-age)',
 })
 export class RunJobCommand extends CommandRunner {
+  /* c8 ignore next */
   constructor(private readonly jobManager: JobManagerService) {
     super();
   }

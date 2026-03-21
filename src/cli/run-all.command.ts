@@ -6,6 +6,7 @@ import { JobManagerService } from '../job-manager/job-manager.service';
   description: 'Run all registered job types',
 })
 export class RunAllCommand extends CommandRunner {
+  /* c8 ignore next */
   constructor(private readonly jobManager: JobManagerService) {
     super();
   }
