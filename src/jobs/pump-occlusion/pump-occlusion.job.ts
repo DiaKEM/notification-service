@@ -34,7 +34,9 @@ export class PumpOcclusionJob extends JobTypeBase {
 
       await ctx.warn('Pump occlusion detected — notification required');
 
-      const config = await this.jobConfigService.findFirst(PUMP_OCCLUSION_JOB_KEY);
+      const config = await this.jobConfigService.findFirst(
+        PUMP_OCCLUSION_JOB_KEY,
+      );
       if (!config) {
         await ctx.warn(
           'No job configuration found for pump-occlusion — skipping notification',
