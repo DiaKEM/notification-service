@@ -9,6 +9,8 @@ import { JobManagerModule } from '../job-manager/job-manager.module';
 import { PumpAgeModule } from '../jobs/pump-age/pump-age.module';
 import { RunAllCommand } from './run-all.command';
 import { RunJobCommand } from './run-job.command';
+import { CreateUserCommand } from './create-user.command';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -25,7 +27,8 @@ import { RunJobCommand } from './run-job.command';
     InsulinLevelModule,
     SensorAgeModule,
     PumpOcclusionModule,
+    UsersModule,
   ],
-  providers: [RunAllCommand, RunJobCommand],
+  providers: [RunAllCommand, RunJobCommand, CreateUserCommand],
 })
 export class CliModule {}

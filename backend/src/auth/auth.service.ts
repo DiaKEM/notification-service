@@ -27,15 +27,15 @@ export class AuthService {
   async login(
     username: string,
     password: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ access_token: string; user: { id: string; username: string } }> {
     const user = await this.validateUser(username, password);
 
-    const payload: JwtPayload = {
-      sub: user._id.toString(),
-      username: user.username,
-      roles: user.roles,
-    };
+    const id = user._id.toString();
+    const payload: JwtPayload = { sub: id, username: user.username, roles: user.roles };
 
-    return { access_token: this.jwt.sign(payload) };
+    return {
+      access_token: this.jwt.sign(payload),
+      user: { id, username: user.username },
+    };
   }
 }

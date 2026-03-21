@@ -63,7 +63,10 @@ describe('AuthService', () => {
 
       const result = await service.login('alice', 'correct');
 
-      expect(result).toEqual({ access_token: 'jwt-token' });
+      expect(result).toEqual({
+        access_token: 'jwt-token',
+        user: { id: 'user-id-1', username: 'alice' },
+      });
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         sub: 'user-id-1',
         username: 'alice',

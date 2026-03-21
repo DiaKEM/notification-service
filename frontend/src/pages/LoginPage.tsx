@@ -27,7 +27,7 @@ export default function LoginPage() {
     e.preventDefault()
     try {
       const result = await login({ username, password }).unwrap()
-      dispatch(setCredentials({ token: result.token, username: result.user.username }))
+      dispatch(setCredentials({ token: result.access_token, username: result.user.username }))
       navigate('/')
     } catch {
       // error is handled via RTK Query state

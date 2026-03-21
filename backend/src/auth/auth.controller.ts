@@ -8,8 +8,14 @@ class LoginDto {
   password!: string;
 }
 
+class UserDto {
+  id!: string;
+  username!: string;
+}
+
 class LoginResponseDto {
   access_token!: string;
+  user!: UserDto;
 }
 
 @ApiTags('auth')
