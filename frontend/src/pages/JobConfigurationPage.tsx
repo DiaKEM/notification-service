@@ -206,18 +206,20 @@ function buildColumns(
 
 // ─── empty form ───────────────────────────────────────────────────────────────
 
-const emptyPayload = (): JobConfigurationPayload => ({
+type DialogForm = Omit<JobConfigurationPayload, 'threshold'> & { threshold: string }
+
+const emptyForm = (): DialogForm => ({
   jobTypeKey: JOB_TYPE_KEYS[0],
-  threshold: 3,
+  threshold: '3',
   notifications: [],
   provider: [],
   priority: 'mid',
 })
 
-function payloadFromConfig(cfg: JobConfiguration): JobConfigurationPayload {
+function formFromConfig(cfg: JobConfiguration): DialogForm {
   return {
     jobTypeKey: cfg.jobTypeKey,
-    threshold: cfg.threshold,
+    threshold: String(cfg.threshold),
     notifications: cfg.notifications,
     provider: cfg.provider,
     priority: cfg.priority,
@@ -298,12 +300,12 @@ interface ConfigDialogProps {
 }
 
 function ConfigDialog({ open, onClose, editing }: ConfigDialogProps) {
-  const [form, setForm] = useState<JobConfigurationPayload>(emptyPayload)
+  const [form, setForm] = useState<DialogForm>(emptyForm)
   const [createConfig, { isLoading: isCreating }] = useCreateJobConfigurationMutation()
   const [updateConfig, { isLoading: isUpdating }] = useUpdateJobConfigurationMutation()
 
   React.useEffect(() => {
-    setForm(editing ? payloadFromConfig(editing) : emptyPayload())
+    setForm(editing ? formFromConfig(editing) : emptyForm())
   }, [editing, open])
 
   const isSaving = isCreating || isUpdating
@@ -333,10 +335,11 @@ function ConfigDialog({ open, onClose, editing }: ConfigDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const payload: JobConfigurationPayload = { ...form, threshold: parseFloat(form.threshold) || 0 }
     if (editing) {
-      await updateConfig({ id: editing._id, ...form })
+      await updateConfig({ id: editing._id, ...payload })
     } else {
-      await createConfig(form)
+      await createConfig(payload)
     }
     onClose()
   }
@@ -370,8 +373,9 @@ function ConfigDialog({ open, onClose, editing }: ConfigDialogProps) {
             <Input
               type="number"
               min={0}
+              step="any"
               value={form.threshold}
-              onChange={(e) => setForm((f) => ({ ...f, threshold: Number(e.target.value) }))}
+              onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))}
             />
           </div>
 
