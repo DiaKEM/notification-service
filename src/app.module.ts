@@ -14,6 +14,7 @@ import { PumpAgeModule } from './jobs/pump-age/pump-age.module';
 import { BatteryLevelModule } from './jobs/battery-level/battery-level.module';
 import { InsulinLevelModule } from './jobs/insulin-level/insulin-level.module';
 import { SensorAgeModule } from './jobs/sensor-age/sensor-age.module';
+import { PumpOcclusionModule } from './jobs/pump-occlusion/pump-occlusion.module';
 import { JobTypeModule } from './job-type/job-type.module';
 import { JobManagerModule } from './job-manager/job-manager.module';
 import { NotificatorModule } from './notificator/notificator.module';
@@ -38,6 +39,7 @@ import { NotificationCheckerModule } from './notification-checker/notification-c
     BatteryLevelModule,
     InsulinLevelModule,
     SensorAgeModule,
+    PumpOcclusionModule,
     JobTypeModule,
     JobManagerModule,
     NotificatorModule,

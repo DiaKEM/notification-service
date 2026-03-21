@@ -21,6 +21,10 @@ export class JobConfigurationService {
     return this.model.find({ jobTypeKey }).exec();
   }
 
+  findFirst(jobTypeKey: string): Promise<JobConfigurationDocument | null> {
+    return this.model.findOne({ jobTypeKey }).exec();
+  }
+
   create(
     data: Omit<JobConfiguration, never>,
   ): Promise<JobConfigurationDocument> {

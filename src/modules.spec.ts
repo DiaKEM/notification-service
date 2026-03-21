@@ -14,6 +14,7 @@ import './jobs/battery-level/battery-level.module';
 import './jobs/insulin-level/insulin-level.module';
 import './jobs/pump-age/pump-age.module';
 import './jobs/sensor-age/sensor-age.module';
+import './jobs/pump-occlusion/pump-occlusion.module';
 import './nightscout/nightscout.module';
 import './notification-checker/notification-checker.module';
 import './notification-manager/notification-manager.module';

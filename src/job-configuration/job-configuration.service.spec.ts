@@ -76,6 +76,22 @@ describe('JobConfigurationService', () => {
     });
   });
 
+  describe('findFirst()', () => {
+    it('returns the first config for a job type', async () => {
+      const doc = { jobTypeKey: 'pump-occlusion' };
+      model.findOne.mockReturnValue({ sort: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(doc) }), exec: jest.fn().mockResolvedValue(doc) });
+      const result = await service.findFirst('pump-occlusion');
+      expect(model.findOne).toHaveBeenCalledWith({ jobTypeKey: 'pump-occlusion' });
+      expect(result).toBe(doc);
+    });
+
+    it('returns null when no config exists', async () => {
+      model.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      const result = await service.findFirst('pump-occlusion');
+      expect(result).toBeNull();
+    });
+  });
+
   describe('findNextLower()', () => {
     it('queries threshold <= currentValue, sorts descending', async () => {
       const doc = { threshold: 4 };

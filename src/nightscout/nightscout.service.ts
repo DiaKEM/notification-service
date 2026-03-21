@@ -715,6 +715,23 @@ export class NightscoutService {
   }
 
   /**
+   * Returns true if the most recent device status reports a pump occlusion.
+   * Checks `pump.status.suspended` which is set to true by closed-loop systems
+   * (Loop, AndroidAPS) when the pump suspends due to an occlusion alarm.
+   */
+  async getLatestPumpOcclusion(): Promise<boolean> {
+    const statuses = await this.getDeviceStatuses({ count: 1 });
+    const status = statuses[0];
+    if (!status) return false;
+
+    const pump = status['pump'] as
+      | { status?: { suspended?: boolean } }
+      | undefined;
+
+    return pump?.status?.suspended === true;
+  }
+
+  /**
    * Returns the insulin reservoir level (units remaining) from the most recent
    * devicestatus entry, or null if not present.
    * Reads `pump.reservoir` which is populated by Loop and AndroidAPS uploaders.

@@ -513,6 +513,33 @@ describe('NightscoutService', () => {
 
   // ── Helper methods ────────────────────────────────────────────────────────
 
+  describe('getLatestPumpOcclusion()', () => {
+    it('returns true when pump.status.suspended is true', async () => {
+      client.get.mockResolvedValue({ data: [{ pump: { status: { suspended: true } } }] });
+      expect(await service.getLatestPumpOcclusion()).toBe(true);
+    });
+
+    it('returns false when pump.status.suspended is false', async () => {
+      client.get.mockResolvedValue({ data: [{ pump: { status: { suspended: false } } }] });
+      expect(await service.getLatestPumpOcclusion()).toBe(false);
+    });
+
+    it('returns false when no device status entries', async () => {
+      client.get.mockResolvedValue({ data: [] });
+      expect(await service.getLatestPumpOcclusion()).toBe(false);
+    });
+
+    it('returns false when pump field is missing', async () => {
+      client.get.mockResolvedValue({ data: [{}] });
+      expect(await service.getLatestPumpOcclusion()).toBe(false);
+    });
+
+    it('returns false when pump.status is missing', async () => {
+      client.get.mockResolvedValue({ data: [{ pump: {} }] });
+      expect(await service.getLatestPumpOcclusion()).toBe(false);
+    });
+  });
+
   describe('getLatestBatteryLevel()', () => {
     it('returns battery from uploader.battery', async () => {
       client.get.mockResolvedValue({ data: [{ uploader: { battery: 85 } }] });
