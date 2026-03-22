@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import { AdminSettingsService } from '../admin/admin-settings.service';
 
 export enum PushoverPriority {
   Lowest = -2,
@@ -139,19 +140,31 @@ export interface PushoverGlance {
 }
 
 @Injectable()
-export class PushoverService {
+export class PushoverService implements OnModuleInit {
   private readonly client: AxiosInstance;
-  private readonly appToken: string;
-  private readonly userKey: string;
+  private appToken!: string;
+  private userKey!: string;
 
-  constructor(private readonly configService: ConfigService) {
-    this.appToken = this.configService.getOrThrow<string>('PUSHOVER_APP_TOKEN');
-    this.userKey = this.configService.getOrThrow<string>('PUSHOVER_USER_KEY');
-
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly adminSettings: AdminSettingsService,
+  ) {
     this.client = axios.create({
       baseURL: 'https://api.pushover.net/1',
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.reinitialize();
+  }
+
+  async reinitialize(): Promise<void> {
+    const settings = await this.adminSettings.getSettings('pushover');
+    this.appToken =
+      settings?.appToken || this.configService.get<string>('PUSHOVER_APP_TOKEN', '');
+    this.userKey =
+      settings?.userKey || this.configService.get<string>('PUSHOVER_USER_KEY', '');
   }
 
   /**

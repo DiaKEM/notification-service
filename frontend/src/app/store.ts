@@ -3,6 +3,7 @@ import { authApi } from '@/features/auth/authApi'
 import { jobExecutionApi } from '@/features/job-execution/jobExecutionApi'
 import { jobConfigurationApi } from '@/features/job-configuration/jobConfigurationApi'
 import { usersApi } from '@/features/users/usersApi'
+import { adminApi } from '@/features/admin/adminApi'
 import authReducer from '@/features/auth/authSlice'
 import { loadAuthState, saveAuthState } from './authPersistence'
 
@@ -15,6 +16,7 @@ export const store = configureStore({
     [jobExecutionApi.reducerPath]: jobExecutionApi.reducer,
     [jobConfigurationApi.reducerPath]: jobConfigurationApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
+    [adminApi.reducerPath]: adminApi.reducer,
   },
   preloadedState: persistedAuth
     ? { auth: { token: persistedAuth.token, username: persistedAuth.username, isAuthenticated: true } }
@@ -24,7 +26,8 @@ export const store = configureStore({
       .concat(authApi.middleware)
       .concat(jobExecutionApi.middleware)
       .concat(jobConfigurationApi.middleware)
-      .concat(usersApi.middleware),
+      .concat(usersApi.middleware)
+      .concat(adminApi.middleware),
 })
 
 store.subscribe(() => {

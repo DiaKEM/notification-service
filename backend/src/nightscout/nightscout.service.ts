@@ -1,8 +1,9 @@
 import { createHash } from 'crypto';
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import { AdminSettingsService } from '../admin/admin-settings.service';
 
 export interface NightscoutQueryParams {
   count?: number;
@@ -93,21 +94,38 @@ export interface NightscoutStatus {
 }
 
 @Injectable()
-export class NightscoutService {
-  private readonly client: AxiosInstance;
+export class NightscoutService implements OnModuleInit {
+  private readonly logger = new Logger(NightscoutService.name);
+  private client!: AxiosInstance;
 
-  constructor(private readonly configService: ConfigService) {
-    const baseURL = this.configService.getOrThrow<string>('NIGHTSCOUT_URL');
-    const apiKey = this.configService.getOrThrow<string>('NIGHTSCOUT_API_KEY');
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly adminSettings: AdminSettingsService,
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.reinitialize();
+  }
+
+  async reinitialize(): Promise<void> {
+    const settings = await this.adminSettings.getSettings('nightscout');
+    const baseURL = (
+      settings?.url || this.configService.get<string>('NIGHTSCOUT_URL', '')
+    ).replace(/\/$/, '');
+    const apiKey =
+      settings?.apiKey || this.configService.get<string>('NIGHTSCOUT_API_KEY', '');
+
+    if (!baseURL || !apiKey) {
+      this.logger.warn('Nightscout not configured — skipping client init');
+      return;
+    }
+
     const hashedApiKey = createHash('sha1').update(apiKey).digest('hex');
-
     this.client = axios.create({
-      baseURL: baseURL.replace(/\/$/, ''),
-      headers: {
-        'api-secret': hashedApiKey,
-        'Content-Type': 'application/json',
-      },
+      baseURL,
+      headers: { 'api-secret': hashedApiKey, 'Content-Type': 'application/json' },
     });
+    this.logger.log('Nightscout client initialized');
   }
 
   private buildParams(

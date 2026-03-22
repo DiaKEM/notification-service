@@ -3,6 +3,7 @@ import LoginPage from '@/pages/LoginPage'
 import JobConfigurationPage from '@/pages/JobConfigurationPage'
 import JobExecutionPage from '@/pages/JobExecutionPage'
 import UserManagementPage from '@/pages/UserManagementPage'
+import AdminPage from '@/pages/AdminPage'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
 
@@ -17,6 +18,7 @@ export default function App() {
             <Route path="/jobs/configuration" element={<JobConfigurationPage />} />
             <Route path="/jobs/execution" element={<JobExecutionPage />} />
             <Route path="/users" element={<UserManagementPage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

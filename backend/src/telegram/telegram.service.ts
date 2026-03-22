@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import { AdminSettingsService } from '../admin/admin-settings.service';
 
 export type TelegramParseMode = 'HTML' | 'Markdown' | 'MarkdownV2';
 
@@ -34,14 +35,18 @@ export interface TelegramSendMessageOptions {
   link_preview_disabled?: boolean;
 }
 
-export interface TelegramSendPhotoOptions
-  extends Omit<TelegramSendMessageOptions, 'link_preview_disabled'> {
+export interface TelegramSendPhotoOptions extends Omit<
+  TelegramSendMessageOptions,
+  'link_preview_disabled'
+> {
   /** Caption for the photo (up to 1024 chars). */
   caption?: string;
 }
 
-export interface TelegramSendDocumentOptions
-  extends Omit<TelegramSendMessageOptions, 'link_preview_disabled'> {
+export interface TelegramSendDocumentOptions extends Omit<
+  TelegramSendMessageOptions,
+  'link_preview_disabled'
+> {
   caption?: string;
 }
 
@@ -126,18 +131,40 @@ export interface TelegramApiResponse<T> {
 }
 
 @Injectable()
-export class TelegramService {
-  private readonly client: AxiosInstance;
-  private readonly chatId: string;
+export class TelegramService implements OnModuleInit {
+  private readonly logger = new Logger(TelegramService.name);
+  private client!: AxiosInstance;
+  private chatId!: string;
 
-  constructor(private readonly configService: ConfigService) {
-    const token = this.configService.getOrThrow<string>('TELEGRAM_BOT_TOKEN');
-    this.chatId = this.configService.getOrThrow<string>('TELEGRAM_CHAT_ID');
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly adminSettings: AdminSettingsService,
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.reinitialize();
+  }
+
+  async reinitialize(): Promise<void> {
+    const settings = await this.adminSettings.getSettings('telegram');
+    console.log(settings);
+    const token =
+      settings?.botToken ||
+      this.configService.get<string>('TELEGRAM_BOT_TOKEN', '');
+    this.chatId =
+      settings?.chatId ||
+      this.configService.get<string>('TELEGRAM_CHAT_ID', '');
+
+    if (!token) {
+      this.logger.warn('Telegram not configured — skipping client init');
+      return;
+    }
 
     this.client = axios.create({
       baseURL: `https://api.telegram.org/bot${token}`,
       headers: { 'Content-Type': 'application/json' },
     });
+    this.logger.log('Telegram client initialized');
   }
 
   private async call<T>(
@@ -561,11 +588,13 @@ export class TelegramService {
   /**
    * Get the most recent updates (messages) received by the bot.
    */
-  async getUpdates(options: {
-    offset?: number;
-    limit?: number;
-    timeout?: number;
-  } = {}): Promise<unknown[]> {
+  async getUpdates(
+    options: {
+      offset?: number;
+      limit?: number;
+      timeout?: number;
+    } = {},
+  ): Promise<unknown[]> {
     return this.call<unknown[]>('getUpdates', options);
   }
 }

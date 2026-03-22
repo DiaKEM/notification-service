@@ -1,5 +1,5 @@
-import { NavLink } from 'react-router-dom'
-import { ChevronDown, LogOut, User } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { ChevronDown, LogOut, Settings, User } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { logout, selectUsername } from '@/features/auth/authSlice'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,7 @@ const navItems = [
 
 export default function Navbar() {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const username = useAppSelector(selectUsername)
 
   return (
@@ -72,6 +73,14 @@ export default function Navbar() {
                 <span className="truncate font-medium">{username}</span>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => navigate('/admin')}
+            >
+              <Settings className="h-4 w-4" aria-hidden />
+              Administration
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer"

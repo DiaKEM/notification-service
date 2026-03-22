@@ -28,6 +28,8 @@ import {
   Clock,
   Columns3,
   Droplet,
+  Loader2,
+  Play,
   RefreshCw,
   ShieldAlert,
   Wifi,
@@ -35,8 +37,11 @@ import {
 } from 'lucide-react'
 import {
   useGetJobExecutionsQuery,
+  useTriggerJobsMutation,
+  JOB_TYPE_KEYS,
   type ExecutionStatus,
   type JobExecution,
+  type JobTypeKey,
 } from '@/features/job-execution/jobExecutionApi'
 import { Button } from '@/components/ui/button'
 import {
@@ -51,7 +56,6 @@ import { cn } from '@/lib/utils'
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
-const JOB_TYPE_KEYS = ['pump-age', 'battery-level', 'sensor-age', 'insulin-level', 'pump-occlusion']
 const STATUSES: ExecutionStatus[] = ['running', 'success', 'skipped', 'failed']
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
 
@@ -401,6 +405,92 @@ function PaginationBar({ table }: { table: ReturnType<typeof useReactTable<JobEx
   )
 }
 
+// ─── trigger panel ────────────────────────────────────────────────────────────
+
+function TriggerPanel({ onTriggered }: { onTriggered: () => void }) {
+  const [selected, setSelected] = useState<Set<JobTypeKey>>(new Set(JOB_TYPE_KEYS))
+  const [triggerJobs, { isLoading }] = useTriggerJobsMutation()
+  const [done, setDone] = useState(false)
+
+  const toggle = (key: JobTypeKey) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+
+  const toggleAll = () =>
+    setSelected(selected.size === JOB_TYPE_KEYS.length ? new Set() : new Set(JOB_TYPE_KEYS))
+
+  const handleRun = async () => {
+    setDone(false)
+    await triggerJobs([...selected] as JobTypeKey[])
+    setDone(true)
+    onTriggered()
+  }
+
+  return (
+    <div className="rounded-lg border bg-muted/20 p-4">
+      <div className="flex flex-wrap items-center gap-4">
+        <span className="text-sm font-medium shrink-0">Manual trigger</span>
+
+        {/* Select-all toggle */}
+        <button
+          type="button"
+          onClick={toggleAll}
+          className="text-xs text-muted-foreground underline-offset-2 hover:underline shrink-0"
+        >
+          {selected.size === JOB_TYPE_KEYS.length ? 'Deselect all' : 'Select all'}
+        </button>
+
+        <div className="flex flex-wrap gap-3">
+          {JOB_TYPE_KEYS.map((key) => {
+            const cfg = jobTypeConfig[key]
+            const Icon = cfg?.icon
+            const checked = selected.has(key)
+            return (
+              <label
+                key={key}
+                className={cn(
+                  'flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors select-none',
+                  checked
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-input bg-background text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={checked}
+                  onChange={() => toggle(key)}
+                />
+                {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
+                {cfg?.label ?? key}
+              </label>
+            )
+          })}
+        </div>
+
+        <div className="ml-auto flex items-center gap-3 shrink-0">
+          {done && !isLoading && (
+            <span className="text-sm text-green-600">Jobs triggered</span>
+          )}
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={handleRun}
+            disabled={isLoading || selected.size === 0}
+          >
+            {isLoading
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Running…</>
+              : <><Play className="h-4 w-4" />Run</>}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── main page ────────────────────────────────────────────────────────────────
 
 export default function JobExecutionPage() {
@@ -461,6 +551,9 @@ export default function JobExecutionPage() {
           Refresh
         </Button>
       </div>
+
+      {/* Trigger panel */}
+      <TriggerPanel onTriggered={() => refetch()} />
 
       {/* Filters + column toggle */}
       <div className="flex flex-wrap items-end justify-between gap-4">

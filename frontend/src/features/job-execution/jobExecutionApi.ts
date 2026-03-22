@@ -24,6 +24,9 @@ export interface JobExecutionFilters {
   limit?: number
 }
 
+export const JOB_TYPE_KEYS = ['pump-age', 'battery-level', 'sensor-age', 'insulin-level', 'pump-occlusion'] as const
+export type JobTypeKey = (typeof JOB_TYPE_KEYS)[number]
+
 export const jobExecutionApi = createApi({
   reducerPath: 'jobExecutionApi',
   baseQuery: baseQueryWithAuth,
@@ -42,7 +45,11 @@ export const jobExecutionApi = createApi({
       },
       providesTags: ['JobExecution'],
     }),
+    triggerJobs: builder.mutation<void, JobTypeKey[]>({
+      query: (keys) => ({ url: '/job-manager/trigger', method: 'POST', body: { keys } }),
+      invalidatesTags: ['JobExecution'],
+    }),
   }),
 })
 
-export const { useGetJobExecutionsQuery } = jobExecutionApi
+export const { useGetJobExecutionsQuery, useTriggerJobsMutation } = jobExecutionApi

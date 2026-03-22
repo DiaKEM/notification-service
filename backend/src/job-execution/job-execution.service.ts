@@ -77,4 +77,11 @@ export class JobExecutionService {
   findLatest(limit = 20): Promise<JobExecutionDocument[]> {
     return this.find({ limit });
   }
+
+  async deleteOlderThan(date: Date): Promise<number> {
+    const result = await this.model
+      .deleteMany({ startedAt: { $lt: date } })
+      .exec();
+    return result.deletedCount;
+  }
 }

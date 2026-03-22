@@ -24,6 +24,7 @@ import { NotificatorModule } from './notificator/notificator.module';
 import { NotificationManagerModule } from './notification-manager/notification-manager.module';
 import { NotificationCheckerModule } from './notification-checker/notification-checker.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     NotificationManagerModule,
     NotificationCheckerModule,
     SchedulerModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
