@@ -18,6 +18,10 @@ import { BatteryLevelModule } from './jobs/battery-level/battery-level.module';
 import { InsulinLevelModule } from './jobs/insulin-level/insulin-level.module';
 import { SensorAgeModule } from './jobs/sensor-age/sensor-age.module';
 import { PumpOcclusionModule } from './jobs/pump-occlusion/pump-occlusion.module';
+import { NightlyReportModule } from './jobs/nightly-report/nightly-report.module';
+import { YesterdayReportModule } from './jobs/yesterday-report/yesterday-report.module';
+import { DayReportModule } from './jobs/day-report/day-report.module';
+import { WeeklyReportModule } from './jobs/weekly-report/weekly-report.module';
 import { JobTypeModule } from './job-type/job-type.module';
 import { JobManagerModule } from './job-manager/job-manager.module';
 import { NotificatorModule } from './notificator/notificator.module';
@@ -47,6 +51,10 @@ import { AdminModule } from './admin/admin.module';
     InsulinLevelModule,
     SensorAgeModule,
     PumpOcclusionModule,
+    NightlyReportModule,
+    YesterdayReportModule,
+    DayReportModule,
+    WeeklyReportModule,
     JobTypeModule,
     JobManagerModule,
     NotificatorModule,

@@ -18,6 +18,8 @@ import {
   ArrowUp,
   ArrowUpDown,
   BatteryMedium,
+  CalendarDays,
+  CalendarRange,
   CheckCircle2,
   ChevronDown,
   ChevronFirst,
@@ -29,21 +31,34 @@ import {
   Columns3,
   Droplet,
   Loader2,
+  Moon,
   Play,
   RefreshCw,
   ShieldAlert,
+  Sun,
+  Trash2,
   Wifi,
   XCircle,
 } from 'lucide-react'
 import {
   useGetJobExecutionsQuery,
   useTriggerJobsMutation,
+  useDeleteJobExecutionMutation,
+  useDeleteFilteredJobExecutionsMutation,
   JOB_TYPE_KEYS,
   type ExecutionStatus,
   type JobExecution,
+  type JobExecutionFilters,
   type JobTypeKey,
 } from '@/features/job-execution/jobExecutionApi'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -64,11 +79,15 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
 type JobTypeIcon = React.ElementType<{ className?: string }>
 
 const jobTypeConfig: Record<string, { icon: JobTypeIcon; label: string }> = {
-  'pump-age':       { icon: Clock,        label: 'Pump Age' },
-  'battery-level':  { icon: BatteryMedium, label: 'Battery Level' },
-  'sensor-age':     { icon: Wifi,         label: 'Sensor Age' },
-  'insulin-level':  { icon: Droplet,      label: 'Insulin Level' },
-  'pump-occlusion': { icon: ShieldAlert,  label: 'Pump Occlusion' },
+  'pump-age':         { icon: Clock,          label: 'Pump Age' },
+  'battery-level':    { icon: BatteryMedium,  label: 'Battery Level' },
+  'sensor-age':       { icon: Wifi,           label: 'Sensor Age' },
+  'insulin-level':    { icon: Droplet,        label: 'Insulin Level' },
+  'pump-occlusion':   { icon: ShieldAlert,    label: 'Pump Occlusion' },
+  'nightly-report':   { icon: Moon,           label: 'Nightly Report' },
+  'yesterday-report': { icon: CalendarDays,   label: 'Yesterday Report' },
+  'day-report':       { icon: Sun,            label: 'Day Report' },
+  'weekly-report':    { icon: CalendarRange,  label: 'Weekly Report' },
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -186,11 +205,53 @@ function ExpandedRow({ row }: { row: Row<JobExecution> }) {
   )
 }
 
+// ─── delete dialog ────────────────────────────────────────────────────────────
+
+interface DeleteDialogProps {
+  mode: 'single' | 'filtered' | null
+  count?: number
+  onConfirm: () => Promise<void>
+  onClose: () => void
+}
+
+function DeleteDialog({ mode, count, onConfirm, onClose }: DeleteDialogProps) {
+  const [isDeleting, setIsDeleting] = React.useState(false)
+
+  const handleConfirm = async () => {
+    setIsDeleting(true)
+    try { await onConfirm() } finally { setIsDeleting(false) }
+  }
+
+  return (
+    <Dialog open={!!mode} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            {mode === 'single' ? 'Delete Execution' : 'Delete Filtered Executions'}
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          {mode === 'single'
+            ? 'Are you sure you want to delete this execution? This action cannot be undone.'
+            : `Are you sure you want to delete all ${count ?? ''} currently filtered executions? This action cannot be undone.`}
+        </p>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isDeleting}>Cancel</Button>
+          <Button variant="destructive" onClick={handleConfirm} disabled={isDeleting}>
+            {isDeleting ? 'Deleting…' : 'Delete'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── column definitions ───────────────────────────────────────────────────────
 
 const col = createColumnHelper<JobExecution>()
 
-const columns = [
+function buildColumns(onDelete: (row: JobExecution) => void) {
+  return [
   // Expand toggle
   col.display({
     id: 'expand',
@@ -256,13 +317,35 @@ const columns = [
     cell: (info) => <span className="whitespace-nowrap text-sm">{formatDateTime(info.getValue())}</span>,
     sortingFn: 'datetime',
   }),
-]
+  col.display({
+    id: 'actions',
+    enableHiding: false,
+    enableSorting: false,
+    header: () => null,
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+          aria-label="Delete execution"
+          onClick={() => onDelete(row.original)}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    ),
+  }),
+  ]
+}
 
 const DEFAULT_HIDDEN: VisibilityState = {
   finishedAt: false,
   needsNotification: false,
   notificationSentAt: false,
 }
+
+type DeleteMode = 'single' | 'filtered' | null
 
 // ─── filter bar ───────────────────────────────────────────────────────────────
 
@@ -499,7 +582,7 @@ export default function JobExecutionPage() {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
-  const filters = useMemo(() => ({
+  const filters = useMemo<JobExecutionFilters>(() => ({
     jobTypeKey: jobTypeKey || undefined,
     status: status || undefined,
     from: from ? new Date(from).toISOString() : undefined,
@@ -508,10 +591,23 @@ export default function JobExecutionPage() {
 
   const { data = [], isLoading, isError, refetch, isFetching } = useGetJobExecutionsQuery(filters)
 
+  const [deleteExecution] = useDeleteJobExecutionMutation()
+  const [deleteFiltered] = useDeleteFilteredJobExecutionsMutation()
+
+  const [deleteMode, setDeleteMode] = useState<DeleteMode>(null)
+  const [deleteTarget, setDeleteTarget] = useState<JobExecution | null>(null)
+
   const [sorting, setSorting] = useState<SortingState>([{ id: 'startedAt', desc: true }])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(DEFAULT_HIDDEN)
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 25 })
   const [expanded, setExpanded] = useState<ExpandedState>({})
+
+  const handleDeleteRow = (row: JobExecution) => {
+    setDeleteTarget(row)
+    setDeleteMode('single')
+  }
+
+  const columns = useMemo(() => buildColumns(handleDeleteRow), [])
 
   const table = useReactTable({
     data,
@@ -536,7 +632,18 @@ export default function JobExecutionPage() {
     setTo('')
   }
 
+  const handleDeleteConfirm = async () => {
+    if (deleteMode === 'single' && deleteTarget) {
+      await deleteExecution(deleteTarget._id)
+    } else if (deleteMode === 'filtered') {
+      await deleteFiltered(filters)
+    }
+    setDeleteMode(null)
+    setDeleteTarget(null)
+  }
+
   const colSpan = table.getVisibleLeafColumns().length
+  const totalRows = table.getFilteredRowModel().rows.length
 
   return (
     <div className="flex flex-col gap-6">
@@ -562,7 +669,20 @@ export default function JobExecutionPage() {
           onJobTypeKey={setJobTypeKey} onStatus={setStatus} onFrom={setFrom} onTo={setTo}
           onReset={handleReset}
         />
-        <ColumnVisibilityMenu table={table} />
+        <div className="flex items-center gap-2">
+          {!isLoading && !isError && totalRows > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-destructive hover:text-destructive"
+              onClick={() => setDeleteMode('filtered')}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete filtered ({totalRows})
+            </Button>
+          )}
+          <ColumnVisibilityMenu table={table} />
+        </div>
       </div>
 
       {/* Table */}
@@ -629,6 +749,14 @@ export default function JobExecutionPage() {
 
       {/* Pagination */}
       {!isLoading && !isError && <PaginationBar table={table} />}
+
+      {/* Delete dialog */}
+      <DeleteDialog
+        mode={deleteMode}
+        count={totalRows}
+        onConfirm={handleDeleteConfirm}
+        onClose={() => { setDeleteMode(null); setDeleteTarget(null) }}
+      />
     </div>
   )
 }

@@ -6,6 +6,10 @@ export const JOB_TYPE_KEYS = [
   'insulin-level',
   'sensor-age',
   'battery-level',
+  'nightly-report',
+  'yesterday-report',
+  'day-report',
+  'weekly-report',
 ] as const;
 
 export type JobTypeKey = (typeof JOB_TYPE_KEYS)[number];

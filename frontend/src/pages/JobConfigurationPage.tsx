@@ -16,6 +16,8 @@ import {
   ArrowUpDown,
   BatteryMedium,
   Bell,
+  CalendarDays,
+  CalendarRange,
   ChevronFirst,
   ChevronLast,
   ChevronLeft,
@@ -23,10 +25,12 @@ import {
   Clock,
   Columns3,
   Droplet,
+  Moon,
   Pencil,
   Plus,
   RefreshCw,
   ShieldAlert,
+  Sun,
   Trash2,
   Wifi,
 } from 'lucide-react'
@@ -63,7 +67,10 @@ import { cn } from '@/lib/utils'
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
-const JOB_TYPE_KEYS = ['pump-age', 'battery-level', 'sensor-age', 'insulin-level', 'pump-occlusion']
+const JOB_TYPE_KEYS = [
+  'pump-age', 'battery-level', 'sensor-age', 'insulin-level', 'pump-occlusion',
+  'nightly-report', 'yesterday-report', 'day-report', 'weekly-report',
+]
 const PROVIDERS: NotificationProvider[] = ['pushover', 'telegram']
 const PRIORITIES: NotificationPriority[] = ['low', 'mid', 'high', 'urgent']
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
@@ -73,11 +80,15 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50]
 type JobTypeIcon = React.ElementType<{ className?: string }>
 
 const jobTypeConfig: Record<string, { icon: JobTypeIcon; label: string }> = {
-  'pump-age':       { icon: Clock,        label: 'Pump Age' },
-  'battery-level':  { icon: BatteryMedium, label: 'Battery Level' },
-  'sensor-age':     { icon: Wifi,         label: 'Sensor Age' },
-  'insulin-level':  { icon: Droplet,      label: 'Insulin Level' },
-  'pump-occlusion': { icon: ShieldAlert,  label: 'Pump Occlusion' },
+  'pump-age':          { icon: Clock,         label: 'Pump Age' },
+  'battery-level':     { icon: BatteryMedium, label: 'Battery Level' },
+  'sensor-age':        { icon: Wifi,          label: 'Sensor Age' },
+  'insulin-level':     { icon: Droplet,       label: 'Insulin Level' },
+  'pump-occlusion':    { icon: ShieldAlert,   label: 'Pump Occlusion' },
+  'nightly-report':    { icon: Moon,          label: 'Nightly Report' },
+  'yesterday-report':  { icon: CalendarDays,  label: 'Yesterday Report' },
+  'day-report':        { icon: Sun,           label: 'Day Report' },
+  'weekly-report':     { icon: CalendarRange, label: 'Weekly Report' },
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────

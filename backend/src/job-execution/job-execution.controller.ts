@@ -1,8 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiSecurity,
   ApiTags,
@@ -49,5 +50,38 @@ export class JobExecutionController {
         : undefined,
       limit: limit ? Number(limit) : undefined,
     });
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a single job execution by ID' })
+  @ApiParam({ name: 'id', description: 'Job execution ID' })
+  @ApiOkResponse()
+  async deleteOne(@Param('id') id: string): Promise<void> {
+    const deleted = await this.service.deleteById(id);
+    if (!deleted) throw new NotFoundException(`Job execution ${id} not found`);
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete all job executions matching the given filters' })
+  @ApiQuery({ name: 'jobTypeKey', required: false })
+  @ApiQuery({ name: 'status', required: false, enum: ['running', 'success', 'skipped', 'failed'] })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  @ApiOkResponse()
+  async deleteFiltered(
+    @Query('jobTypeKey') jobTypeKey?: string,
+    @Query('status') status?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ): Promise<{ deletedCount: number }> {
+    const deletedCount = await this.service.deleteFiltered({
+      jobTypeKey: jobTypeKey || undefined,
+      status: (status as ExecutionStatus) || undefined,
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
+    });
+    return { deletedCount };
   }
 }

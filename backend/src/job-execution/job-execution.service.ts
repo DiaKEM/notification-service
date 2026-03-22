@@ -84,4 +84,30 @@ export class JobExecutionService {
       .exec();
     return result.deletedCount;
   }
+
+  async deleteById(id: string): Promise<boolean> {
+    const result = await this.model.deleteOne({ _id: id }).exec();
+    return result.deletedCount === 1;
+  }
+
+  async deleteFiltered(
+    filter: {
+      jobTypeKey?: string;
+      status?: ExecutionStatus;
+      from?: Date;
+      to?: Date;
+    } = {},
+  ): Promise<number> {
+    const query: Record<string, unknown> = {};
+    if (filter.jobTypeKey) query['jobTypeKey'] = filter.jobTypeKey;
+    if (filter.status) query['status'] = filter.status;
+    if (filter.from || filter.to) {
+      query['startedAt'] = {
+        ...(filter.from && { $gte: filter.from }),
+        ...(filter.to && { $lte: filter.to }),
+      };
+    }
+    const result = await this.model.deleteMany(query).exec();
+    return result.deletedCount;
+  }
 }
