@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Activity, ChevronDown, LogOut, User } from 'lucide-react'
+import { ChevronDown, LogOut, User } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { logout, selectUsername } from '@/features/auth/authSlice'
 import { Button } from '@/components/ui/button'
@@ -27,9 +27,11 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center gap-6 px-6">
         {/* Logo */}
-        <div className="flex items-center gap-2 font-semibold select-none">
-          <Activity className="h-5 w-5 text-primary" aria-hidden />
-          <span className="text-sm">Diakem Notify</span>
+        <div className="flex items-center gap-2 select-none">
+          <img src="/images/navbar.png" alt="Diakem Notify" className="h-8 w-auto" />
+          <span className="text-lg font-bold tracking-tight">
+            <span style={{ color: '#2879C0' }}>Dia</span><span style={{ color: '#3D8B3D' }}>KEM</span>
+          </span>
         </div>
 
         {/* Navigation links */}

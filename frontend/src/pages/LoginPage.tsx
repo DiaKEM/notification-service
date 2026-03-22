@@ -36,8 +36,10 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
+      <div className="flex w-full max-w-sm flex-col items-center gap-8">
+        <img src="/images/logo.png" alt="Diakem Notify" className="h-44 w-auto" />
+      <Card className="w-full">
+        <CardHeader className="text-center">
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
             Enter your credentials to access your account.
@@ -75,13 +77,14 @@ export default function LoginPage() {
               </p>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="mt-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </CardFooter>
         </form>
       </Card>
+      </div>
     </div>
   )
 }
