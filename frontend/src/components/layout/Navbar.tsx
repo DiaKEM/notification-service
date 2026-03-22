@@ -1,5 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom'
-import { ChevronDown, LogOut, Settings, User } from 'lucide-react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { ChevronDown, LogOut, Settings, User, Users } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { logout, selectUsername } from '@/features/auth/authSlice'
 import { Button } from '@/components/ui/button'
@@ -13,16 +13,18 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
-const navItems = [
+const jobItems = [
   { label: 'Job Configurations', to: '/jobs/configuration' },
-  { label: 'Job Executions', to: '/jobs/execution' },
-  { label: 'Users', to: '/users' },
+  { label: 'Job Executions',     to: '/jobs/execution' },
 ]
 
 export default function Navbar() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
   const username = useAppSelector(selectUsername)
+
+  const jobsActive = location.pathname.startsWith('/jobs')
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -37,22 +39,32 @@ export default function Navbar() {
 
         {/* Navigation links */}
         <nav className="flex items-center gap-1" aria-label="Main navigation">
-          {navItems.map(({ label, to }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  isActive
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  jobsActive
                     ? 'bg-secondary text-foreground'
                     : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
-                )
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
+                )}
+              >
+                Jobs
+                <ChevronDown className="h-3 w-3" aria-hidden />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {jobItems.map(({ label, to }) => (
+                <DropdownMenuItem
+                  key={to}
+                  className={cn('cursor-pointer', location.pathname === to && 'bg-secondary')}
+                  onClick={() => navigate(to)}
+                >
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
 
         <div className="flex-1" />
@@ -74,6 +86,13 @@ export default function Navbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => navigate('/users')}
+            >
+              <Users className="h-4 w-4" aria-hidden />
+              User Management
+            </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => navigate('/admin')}
