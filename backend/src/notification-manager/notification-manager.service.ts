@@ -24,6 +24,7 @@ export class NotificationManagerService {
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : String(err);
           this.logger.error(`Provider "${key}" failed: ${message}`);
+          this.logger.error(err);
         }
       }),
     );

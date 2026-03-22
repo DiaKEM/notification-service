@@ -18,7 +18,9 @@ export abstract class ReportJobBase extends JobTypeBase {
 
   protected abstract get reportTitle(): string;
   protected abstract get reportPeriodLabel(): string;
-  protected abstract getTimeWindow(): { from: Date; to: Date } | { error: string };
+  protected abstract getTimeWindow():
+    | { from: Date; to: Date }
+    | { error: string };
 
   async execute(): Promise<JobExecutionContext> {
     const ctx = await this.jobExecutionService.create(this.jobKey);
@@ -45,14 +47,19 @@ export abstract class ReportJobBase extends JobTypeBase {
 
       const config = await this.jobConfigService.findFirst(this.jobKey);
       if (!config) {
-        await ctx.warn('No job configuration found — notification providers not configured');
+        await ctx.warn(
+          'No job configuration found — notification providers not configured',
+        );
         await ctx.complete();
         return ctx;
       }
 
       await ctx.setJobConfiguration(config);
 
-      const message = this.glucoseReport.formatReport(this.reportPeriodLabel, stats);
+      const message = this.glucoseReport.formatReport(
+        this.reportPeriodLabel,
+        stats,
+      );
       await this.notificationManager.sendMessage(config.provider, {
         title: this.reportTitle,
         message,
