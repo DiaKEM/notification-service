@@ -209,6 +209,35 @@ export class PushoverService implements OnModuleInit {
   }
 
   /**
+   * Send a push notification with an image attachment (multipart upload).
+   */
+  async sendMessageWithImage(
+    msg: PushoverMessage,
+    imageBuffer: Buffer,
+  ): Promise<PushoverMessageResponse> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const FormData = require('form-data') as typeof import('form-data');
+    const form = new FormData();
+    form.append('token', this.appToken);
+    form.append('user', msg.user ?? this.userKey);
+    form.append('message', msg.message);
+    if (msg.title) form.append('title', msg.title);
+    if (msg.priority !== undefined) form.append('priority', String(msg.priority));
+    if (msg.sound) form.append('sound', msg.sound);
+    form.append('attachment', imageBuffer, {
+      filename: 'chart.png',
+      contentType: 'image/png',
+    });
+
+    const { data } = await this.client.post<PushoverMessageResponse>(
+      '/messages.json',
+      form,
+      { headers: form.getHeaders() },
+    );
+    return data;
+  }
+
+  /**
    * Validate a user or group key. Optionally checks a specific device.
    */
   async validateUser(

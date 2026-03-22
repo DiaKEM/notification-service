@@ -23,7 +23,13 @@ export class TelegramNotificatorProvider extends NotificatorProviderBase {
 
   async send(payload: NotificatorPayload): Promise<void> {
     const prefix = PRIORITY_PREFIX[payload.priority];
-    const header = payload.title ? `*${payload.title}*\n` : '';
-    await this.telegram.sendMessage(`${prefix} ${header}${payload.message}`);
+    const header = payload.title ? `${payload.title}\n` : '';
+    const text = `${prefix} ${header}${payload.message}`;
+
+    if (payload.imageBuffer) {
+      await this.telegram.sendPhotoBuffer(payload.imageBuffer, { caption: text });
+    } else {
+      await this.telegram.sendMessage(`${prefix} ${payload.title ? `*${payload.title}*\n` : ''}${payload.message}`);
+    }
   }
 }

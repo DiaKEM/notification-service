@@ -25,10 +25,16 @@ export class PushoverNotificatorProvider extends NotificatorProviderBase {
   }
 
   async send(payload: NotificatorPayload): Promise<void> {
-    await this.pushover.sendMessage({
+    const msg = {
       message: payload.message,
       title: payload.title,
       priority: PRIORITY_MAP[payload.priority],
-    });
+    };
+
+    if (payload.imageBuffer) {
+      await this.pushover.sendMessageWithImage(msg, payload.imageBuffer);
+    } else {
+      await this.pushover.sendMessage(msg);
+    }
   }
 }

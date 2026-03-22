@@ -325,6 +325,34 @@ export class TelegramService implements OnModuleInit {
   }
 
   /**
+   * Send a photo from a raw Buffer (multipart upload).
+   */
+  async sendPhotoBuffer(
+    buffer: Buffer,
+    options: TelegramSendPhotoOptions & { filename?: string } = {},
+  ): Promise<TelegramMessage> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const FormData = require('form-data') as typeof import('form-data');
+    const form = new FormData();
+    form.append('chat_id', String(options.chat_id ?? this.chatId));
+    form.append('photo', buffer, {
+      filename: options.filename ?? 'chart.png',
+      contentType: 'image/png',
+    });
+    if (options.caption) form.append('caption', options.caption);
+    if (options.parse_mode) form.append('parse_mode', options.parse_mode);
+    if (options.disable_notification != null)
+      form.append('disable_notification', String(options.disable_notification));
+
+    const { data } = await this.client.post<TelegramApiResponse<TelegramMessage>>(
+      '/sendPhoto',
+      form,
+      { headers: form.getHeaders() },
+    );
+    return data.result;
+  }
+
+  /**
    * Send a document (file) by URL or file_id.
    */
   async sendDocument(

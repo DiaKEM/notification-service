@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { JobType } from '../../job-type/job-type.decorator';
 import { JobExecutionService } from '../../job-execution/job-execution.service';
-import { GlucoseReportService } from '../../glucose-report/glucose-report.service';
+import { GlucoseReportService, GlucoseReportStats } from '../../glucose-report/glucose-report.service';
+import { GlucoseChartService } from '../../glucose-report/glucose-chart.service';
 import { ReportJobBase } from '../../glucose-report/report-job-base';
 import { JobConfigurationService } from '../../job-configuration/job-configuration.service';
 import { NotificationManagerService } from '../../notification-manager/notification-manager.service';
@@ -16,6 +17,7 @@ export class YesterdayReportJob extends ReportJobBase {
     glucoseReport: GlucoseReportService,
     jobConfigService: JobConfigurationService,
     notificationManager: NotificationManagerService,
+    private readonly glucoseChart: GlucoseChartService,
   ) {
     super(YESTERDAY_REPORT_JOB_KEY, jobExecutionService, glucoseReport, jobConfigService, notificationManager);
   }
@@ -25,6 +27,10 @@ export class YesterdayReportJob extends ReportJobBase {
     const d = new Date();
     d.setDate(d.getDate() - 1);
     return `Yesterday (${d.toLocaleDateString(undefined, { dateStyle: 'medium' })})`;
+  }
+
+  protected async getImageBuffer(stats: GlucoseReportStats): Promise<Buffer | undefined> {
+    return this.glucoseChart.renderDonut(stats, this.reportTitle);
   }
 
   protected getTimeWindow(): { from: Date; to: Date } | { error: string } {

@@ -4,6 +4,7 @@ export interface NotificatorPayload {
   title?: string;
   message: string;
   priority: NotificationPriority;
+  imageBuffer?: Buffer;
 }
 
 export abstract class NotificatorProviderBase {

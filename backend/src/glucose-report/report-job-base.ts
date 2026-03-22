@@ -1,7 +1,7 @@
 import { JobTypeBase } from '../job-type/job-type-base';
 import { JobExecutionContext } from '../job-execution/job-execution.context';
 import { JobExecutionService } from '../job-execution/job-execution.service';
-import { GlucoseReportService } from './glucose-report.service';
+import { GlucoseReportService, GlucoseReportStats } from './glucose-report.service';
 import { JobConfigurationService } from '../job-configuration/job-configuration.service';
 import { NotificationManagerService } from '../notification-manager/notification-manager.service';
 
@@ -21,6 +21,12 @@ export abstract class ReportJobBase extends JobTypeBase {
   protected abstract getTimeWindow():
     | { from: Date; to: Date }
     | { error: string };
+
+  // Override in subclasses to attach an image to the notification.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected async getImageBuffer(_stats: GlucoseReportStats): Promise<Buffer | undefined> {
+    return undefined;
+  }
 
   async execute(): Promise<JobExecutionContext> {
     const ctx = await this.jobExecutionService.create(this.jobKey);
@@ -60,10 +66,12 @@ export abstract class ReportJobBase extends JobTypeBase {
         this.reportPeriodLabel,
         stats,
       );
+      const imageBuffer = await this.getImageBuffer(stats);
       await this.notificationManager.sendMessage(config.provider, {
         title: this.reportTitle,
         message,
         priority: config.priority,
+        imageBuffer,
       });
 
       await ctx.setNotificationSent();
