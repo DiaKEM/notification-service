@@ -304,13 +304,15 @@ function buildColumns(onDelete: (row: JobExecution) => void) {
     cell: (info) => <span className="whitespace-nowrap text-sm">{formatDateTime(info.getValue())}</span>,
     sortingFn: 'datetime',
   }),
-  col.accessor('needsNotification', {
+  col.display({
+    id: 'needsNotification',
     header: 'Notification',
-    cell: (info) => (
-      <span className={cn('text-sm', info.getValue() ? 'text-foreground' : 'text-muted-foreground')}>
-        {info.getValue() ? 'Required' : 'None'}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const { notificationSentAt } = row.original
+      return notificationSentAt
+        ? <CheckCircle2 className="h-4 w-4 text-green-600" aria-label="Sent" />
+        : <XCircle className="h-4 w-4 text-muted-foreground/50" aria-label="Not sent" />
+    },
   }),
   col.accessor('notificationSentAt', {
     header: 'Notified At',
