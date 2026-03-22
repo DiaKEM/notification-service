@@ -48,6 +48,17 @@ class SchedulerConfigDto {
   expression!: string;
 }
 
+class GlucoseRangeDto {
+  name!: string;
+  lowerLimit!: number;
+  upperLimit!: number;
+}
+
+class GlucoseLimitsDto {
+  unit!: string;
+  ranges!: GlucoseRangeDto[];
+}
+
 @ApiTags('admin')
 @ApiBearerAuth()
 @Roles('admin')
@@ -221,5 +232,29 @@ export class AdminController {
     const date = new Date(before);
     const deletedCount = await this.jobExecutions.deleteOlderThan(date);
     return { deletedCount };
+  }
+
+  @Get('glucose-limits')
+  @ApiOperation({ summary: 'Return the configured blood glucose limits and named ranges' })
+  @ApiOkResponse()
+  async getGlucoseLimits(): Promise<{
+    unit: string;
+    ranges: Array<{ name: string; lowerLimit: number; upperLimit: number }>;
+  }> {
+    const s = await this.adminSettings.getSettings('glucose-limits');
+    const ranges = s?.ranges
+      ? (JSON.parse(s.ranges) as Array<{ name: string; lowerLimit: number; upperLimit: number }>)
+      : [];
+    return { unit: s?.unit ?? 'mg/dL', ranges };
+  }
+
+  @Patch('glucose-limits')
+  @ApiOperation({ summary: 'Save blood glucose limits and named ranges' })
+  @ApiOkResponse()
+  async updateGlucoseLimits(@Body() body: GlucoseLimitsDto): Promise<void> {
+    await this.adminSettings.upsertSettings('glucose-limits', {
+      unit: body.unit,
+      ranges: JSON.stringify(body.ranges),
+    });
   }
 }

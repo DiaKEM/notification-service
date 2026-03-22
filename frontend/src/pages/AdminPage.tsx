@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Activity, CheckCircle2, Database, Eye, EyeOff, Loader2, RefreshCw, Send, Trash2, XCircle } from 'lucide-react'
 import {
   useGetAdminConfigQuery,
@@ -10,7 +10,10 @@ import {
   useDeleteJobExecutionsMutation,
   useGetSchedulerConfigQuery,
   useUpdateSchedulerMutation,
+  useGetGlucoseLimitsQuery,
+  useUpdateGlucoseLimitsMutation,
   type ServiceKey,
+  type GlucoseUnit,
 } from '@/features/admin/adminApi'
 import { Button } from '@/components/ui/button'
 import {
@@ -60,16 +63,12 @@ function SecretInput({
   )
 }
 
-// ─── tabs ─────────────────────────────────────────────────────────────────────
+// ─── service tabs ─────────────────────────────────────────────────────────────
 
-type Tab = ServiceKey | 'scheduler' | 'database'
-
-const TABS: { key: Tab; label: string }[] = [
+const SERVICE_TABS: { key: ServiceKey; label: string }[] = [
   { key: 'nightscout', label: 'Nightscout' },
   { key: 'pushover',   label: 'Pushover' },
   { key: 'telegram',   label: 'Telegram' },
-  { key: 'scheduler',  label: 'Scheduler' },
-  { key: 'database',   label: 'Database' },
 ]
 
 // ─── connection status ────────────────────────────────────────────────────────
@@ -494,10 +493,174 @@ function DatabasePanel() {
   )
 }
 
+// ─── glucose limits panel ─────────────────────────────────────────────────────
+
+const UNITS: GlucoseUnit[] = ['mg/dL', 'mmol/L']
+
+const RANGE_NAMES = ['Very Low', 'Low', 'In Range', 'High', 'Very High'] as const
+type RangeName = (typeof RANGE_NAMES)[number]
+
+const RANGE_STYLE: Record<RangeName, { dot: string; badge: string }> = {
+  'Very Low': { dot: 'bg-purple-500',  badge: 'bg-purple-100 text-purple-800' },
+  'Low':      { dot: 'bg-orange-500',  badge: 'bg-orange-100 text-orange-800' },
+  'In Range': { dot: 'bg-green-500',   badge: 'bg-green-100  text-green-800'  },
+  'High':     { dot: 'bg-amber-500',   badge: 'bg-amber-100  text-amber-800'  },
+  'Very High':{ dot: 'bg-red-500',     badge: 'bg-red-100    text-red-800'    },
+}
+
+const DEFAULTS: Record<GlucoseUnit, Array<{ name: RangeName; lowerLimit: number; upperLimit: number }>> = {
+  'mg/dL': [
+    { name: 'Very Low',  lowerLimit: 0,   upperLimit: 54  },
+    { name: 'Low',       lowerLimit: 54,  upperLimit: 70  },
+    { name: 'In Range',  lowerLimit: 70,  upperLimit: 180 },
+    { name: 'High',      lowerLimit: 180, upperLimit: 250 },
+    { name: 'Very High', lowerLimit: 250, upperLimit: 400 },
+  ],
+  'mmol/L': [
+    { name: 'Very Low',  lowerLimit: 0,   upperLimit: 3.0  },
+    { name: 'Low',       lowerLimit: 3.0, upperLimit: 3.9  },
+    { name: 'In Range',  lowerLimit: 3.9, upperLimit: 10.0 },
+    { name: 'High',      lowerLimit: 10.0,upperLimit: 13.9 },
+    { name: 'Very High', lowerLimit: 13.9,upperLimit: 22.2 },
+  ],
+}
+
+function GlucoseLimitsPanel() {
+  const { data, isLoading, isError } = useGetGlucoseLimitsQuery()
+  const [updateGlucoseLimits, { isLoading: isSaving, isSuccess }] = useUpdateGlucoseLimitsMutation()
+
+  const [unit, setUnit] = useState<GlucoseUnit>('mg/dL')
+  const [ranges, setRanges] = useState<GlucoseRange[]>(DEFAULTS['mg/dL'])
+
+  useEffect(() => {
+    if (data) {
+      setUnit(data.unit)
+      setRanges(data.ranges.length > 0 ? data.ranges : DEFAULTS[data.unit])
+    }
+  }, [data])
+
+  const handleUnitChange = (newUnit: GlucoseUnit) => {
+    setUnit(newUnit)
+    setRanges(DEFAULTS[newUnit])
+  }
+
+  const updateRange = (index: number, field: 'lowerLimit' | 'upperLimit', raw: string) => {
+    const value = parseFloat(raw)
+    setRanges((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: isNaN(value) ? 0 : value } : r)))
+  }
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await updateGlucoseLimits({ unit, ranges })
+  }
+
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>
+  if (isError)   return <p className="text-sm text-destructive">Failed to load glucose limits.</p>
+
+  return (
+    <form onSubmit={handleSave} className="flex flex-col gap-5">
+      {/* Unit selector */}
+      <div className="flex flex-col gap-1.5">
+        <Label>Unit</Label>
+        <div className="flex rounded-md border overflow-hidden w-fit">
+          {UNITS.map((u) => (
+            <button
+              key={u}
+              type="button"
+              onClick={() => handleUnitChange(u)}
+              className={cn(
+                'px-4 py-1.5 text-sm font-medium transition-colors',
+                unit === u
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-background text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {u}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Ranges table */}
+      <div className="rounded-md border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-muted/40">
+              <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Range</th>
+              <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Lower ({unit})</th>
+              <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Upper ({unit})</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ranges.map((range, i) => {
+              const style = RANGE_STYLE[range.name as RangeName]
+              return (
+                <tr key={range.name} className="border-b last:border-0 hover:bg-muted/20">
+                  <td className="px-4 py-2.5">
+                    <span className={cn('inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 text-xs font-medium', style?.badge)}>
+                      <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', style?.dot)} />
+                      {range.name}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2">
+                    <Input
+                      type="number"
+                      step="any"
+                      min={0}
+                      className="h-8 w-28"
+                      value={range.lowerLimit}
+                      onChange={(e) => updateRange(i, 'lowerLimit', e.target.value)}
+                    />
+                  </td>
+                  <td className="px-4 py-2">
+                    <Input
+                      type="number"
+                      step="any"
+                      min={0}
+                      className="h-8 w-28"
+                      value={range.upperLimit}
+                      onChange={(e) => updateRange(i, 'upperLimit', e.target.value)}
+                    />
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Button type="submit" size="sm" disabled={isSaving}>
+          {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</> : 'Save'}
+        </Button>
+        {isSuccess && !isSaving && <span className="text-sm text-green-600">Saved</span>}
+      </div>
+    </form>
+  )
+}
+
+// ─── section wrapper ──────────────────────────────────────────────────────────
+
+function Section({ title, description, children }: {
+  title: string
+  description?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="rounded-lg border">
+      <div className="border-b px-6 py-4">
+        <h2 className="text-base font-semibold">{title}</h2>
+        {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
+      </div>
+      <div className="p-6">{children}</div>
+    </div>
+  )
+}
+
 // ─── main page ────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('nightscout')
+  const [activeService, setActiveService] = useState<ServiceKey>('nightscout')
   const [testStatuses, setTestStatuses] = useState<Record<ServiceKey, TestStatus>>({
     nightscout: 'idle',
     pushover: 'idle',
@@ -507,10 +670,10 @@ export default function AdminPage() {
   const { data: config, isLoading, isError } = useGetAdminConfigQuery()
   const [testConnection] = useTestConnectionMutation()
 
-  const handleTest = async (service: ServiceKey, config: Record<string, string>) => {
+  const handleTest = async (service: ServiceKey, cfg: Record<string, string>) => {
     setTestStatuses((s) => ({ ...s, [service]: 'testing' }))
     try {
-      const result = await testConnection({ service, config }).unwrap()
+      const result = await testConnection({ service, config: cfg }).unwrap()
       setTestStatuses((s) => ({ ...s, [service]: result.ok ? 'ok' : 'error' }))
     } catch {
       setTestStatuses((s) => ({ ...s, [service]: 'error' }))
@@ -526,58 +689,87 @@ export default function AdminPage() {
         </p>
       </div>
 
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading configuration…</p>
-      ) : isError ? (
-        <p className="text-sm text-destructive">Failed to load configuration.</p>
-      ) : config ? (
-        <div className="rounded-lg border">
-          {/* Tab bar */}
-          <div className="flex border-b">
-            {TABS.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={cn(
-                  'px-5 py-3 text-sm font-medium transition-colors',
-                  activeTab === key
-                    ? 'border-b-2 border-primary text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+      {/* ── Section 1: Third-party services ── */}
+      <Section
+        title="Third-party Services"
+        description="Connect Nightscout, Pushover, and Telegram. Test and save each service independently."
+      >
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading configuration…</p>
+        ) : isError ? (
+          <p className="text-sm text-destructive">Failed to load configuration.</p>
+        ) : config ? (
+          <div className="flex flex-col gap-0">
+            {/* Service sub-tabs */}
+            <div className="flex border-b -mx-6 px-6 mb-6">
+              {SERVICE_TABS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveService(key)}
+                  className={cn(
+                    'px-4 py-2.5 text-sm font-medium transition-colors',
+                    activeService === key
+                      ? 'border-b-2 border-primary text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-          {/* Panel */}
-          <div className={cn('p-6', activeTab !== 'database' && 'max-w-lg')}>
-            {activeTab === 'database' && <DatabasePanel />}
-            {activeTab === 'scheduler' && <SchedulerPanel />}
-            {activeTab === 'nightscout' && (
-              <NightscoutPanel
-                initial={config.nightscout}
-                testStatus={testStatuses.nightscout}
-                onTest={(cfg) => handleTest('nightscout', cfg)}
-              />
-            )}
-            {activeTab === 'pushover' && (
-              <PushoverPanel
-                initial={config.pushover}
-                testStatus={testStatuses.pushover}
-                onTest={(cfg) => handleTest('pushover', cfg)}
-              />
-            )}
-            {activeTab === 'telegram' && (
-              <TelegramPanel
-                initial={config.telegram}
-                testStatus={testStatuses.telegram}
-                onTest={(cfg) => handleTest('telegram', cfg)}
-              />
-            )}
+            <div className="max-w-lg">
+              {activeService === 'nightscout' && (
+                <NightscoutPanel
+                  initial={config.nightscout}
+                  testStatus={testStatuses.nightscout}
+                  onTest={(cfg) => handleTest('nightscout', cfg)}
+                />
+              )}
+              {activeService === 'pushover' && (
+                <PushoverPanel
+                  initial={config.pushover}
+                  testStatus={testStatuses.pushover}
+                  onTest={(cfg) => handleTest('pushover', cfg)}
+                />
+              )}
+              {activeService === 'telegram' && (
+                <TelegramPanel
+                  initial={config.telegram}
+                  testStatus={testStatuses.telegram}
+                  onTest={(cfg) => handleTest('telegram', cfg)}
+                />
+              )}
+            </div>
           </div>
+        ) : null}
+      </Section>
+
+      {/* ── Section 2: Glucose Limits ── */}
+      <Section
+        title="Blood Glucose Limits"
+        description="Define the target range for blood glucose levels. These limits are used by monitoring jobs to determine when to send alerts."
+      >
+        <GlucoseLimitsPanel />
+      </Section>
+
+      {/* ── Section 4: Scheduler ── */}
+      <Section
+        title="Scheduler"
+        description="Configure when the automated job runner executes. Changes apply immediately."
+      >
+        <div className="max-w-lg">
+          <SchedulerPanel />
         </div>
-      ) : null}
+      </Section>
+
+      {/* ── Section 3: Database ── */}
+      <Section
+        title="Database"
+        description="Monitor database size and manage stored job execution records."
+      >
+        <DatabasePanel />
+      </Section>
     </div>
   )
 }

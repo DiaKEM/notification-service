@@ -19,12 +19,25 @@ export interface DatabaseStats {
   jobExecutions: { count: number; sizeMb: number }
 }
 
+export type GlucoseUnit = 'mg/dL' | 'mmol/L'
+
+export interface GlucoseRange {
+  name: string
+  lowerLimit: number
+  upperLimit: number
+}
+
+export interface GlucoseLimits {
+  unit: GlucoseUnit
+  ranges: GlucoseRange[]
+}
+
 export type ServiceKey = 'nightscout' | 'pushover' | 'telegram'
 
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: baseQueryWithAuth,
-  tagTypes: ['AdminConfig', 'DatabaseStats', 'Scheduler'],
+  tagTypes: ['AdminConfig', 'DatabaseStats', 'Scheduler', 'GlucoseLimits'],
   endpoints: (builder) => ({
     getAdminConfig: builder.query<AdminConfig, void>({
       query: () => '/admin/config',
@@ -61,6 +74,14 @@ export const adminApi = createApi({
       query: (expression) => ({ url: '/admin/scheduler', method: 'PATCH', body: { expression } }),
       invalidatesTags: ['Scheduler'],
     }),
+    getGlucoseLimits: builder.query<GlucoseLimits, void>({
+      query: () => '/admin/glucose-limits',
+      providesTags: ['GlucoseLimits'],
+    }),
+    updateGlucoseLimits: builder.mutation<void, GlucoseLimits>({
+      query: (body) => ({ url: '/admin/glucose-limits', method: 'PATCH', body }),
+      invalidatesTags: ['GlucoseLimits'],
+    }),
   }),
 })
 
@@ -74,4 +95,6 @@ export const {
   useDeleteJobExecutionsMutation,
   useGetSchedulerConfigQuery,
   useUpdateSchedulerMutation,
+  useGetGlucoseLimitsQuery,
+  useUpdateGlucoseLimitsMutation,
 } = adminApi
