@@ -25,7 +25,7 @@
     "test:check-telegram-api": "jest --config ./test/jest-e2e.json --testPathPatterns=telegram --testNamePattern=\"should (return true and send a test message with valid credentials|send a plain text message)\""
   },
   "dependencies": {
-    "@nestjs/common": "^11.0.1",
+    "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
